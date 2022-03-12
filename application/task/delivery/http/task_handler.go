@@ -20,7 +20,7 @@ func CreateTaskHandler(e *echo.Echo,
 	taskHandler := TaskHandler{
 		uc: uc,
 	}
-	e.GET("/api/v1/task/:id", taskHandler.getTask)
+	e.GET("/api/v1/tasks/:id", taskHandler.getTask)
 
 }
 
@@ -31,7 +31,6 @@ func (th *TaskHandler) getTask(c echo.Context) error {
 	n, _ := strconv.ParseUint(string(id), 10, 64)
 
 	t, err := th.uc.GetTask(n)
-
 	if err != nil {
 		return err
 	}

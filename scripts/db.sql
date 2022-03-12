@@ -23,6 +23,15 @@ CREATE TABLE tasks
     date timestamp not null
 );
 
+CREATE TABLE solutions
+(
+    id          bigserial primary key,
+    task_id bigint references tasks (id) on delete cascade,
+    check_result int not null default 0, 
+    tests_passed  int not null,
+    tests_total       int not null
+);
+
 /*
 CREATE TABLE solutions
 (
@@ -36,8 +45,7 @@ CREATE TABLE solutions
     code varchar(10) default null,
     date timestamp not null, 
 );
-insert into tasks values (1, 'Sum of two numbers',         'Given two numbers. Calculate their sum.',         'It is a very easy task',         '-2^31 <= a <= 2^32, -2^31 <= b <= 2^32',         'c = a + b', 10, 
-        '[["1 2", "3"],["-2 2", "0"]]', 1, false,null, '2021-05-31 19:00:00');sudo su postgres
+insert into tasks values (1, 'Sum of two numbers',         'Given two numbers. Calculate their sum.',         'It is a very easy task','-2^31 <= a <= 2^32, -2^31 <= b <= 2^32', 'c = a + b', 10, '[["1 2", "3"],["-2 2", "0"]]', 1, false,null, '2021-05-31 19:00:00');sudo su postgres
 psql 
 
 psql -c "CREATE USER lk WITH superuser login password 'liokor';"
