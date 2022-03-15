@@ -52,13 +52,14 @@ func (sd *SolutionDatabase) UpdateSolution(id uint64, code int, tests int) error
 	return nil
 }
 
-func (sd *SolutionDatabase) InsertSolution(taskId uint64, testsTotal int,
-	receivedTime time.Time) (uint64, error) {
+func (sd *SolutionDatabase) InsertSolution(taskId uint64, code string,
+	testsTotal int, receivedTime time.Time) (uint64, error) {
 	var id uint64
 	err := sd.pool.QueryRow(context.Background(),
-		`INSERT INTO solutions (task_id, check_result, tests_passed, tests_total, received_date_time) 
-		VALUES ($1, 1, 0, $2, $3) RETURNING id`,
-		taskId, testsTotal, receivedTime).Scan(&id)
+		`INSERT INTO solutions (task_id, check_result, tests_passed, tests_total, 
+			received_date_time, source_code) 
+		VALUES ($1, 1, 0, $2, $3, $4) RETURNING id`,
+		taskId, testsTotal, receivedTime, code).Scan(&id)
 	if err != nil {
 		log.Println(err)
 		return 0, echo.NewHTTPError(http.StatusBadRequest, err.Error())

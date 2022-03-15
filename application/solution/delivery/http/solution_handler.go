@@ -50,10 +50,10 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
+	log.Println(sln.SourceCode)
 	testAmount := task.TestsAmount
-	log.Println(err)
-	solId, err := sh.UseCase.InsertSolution(uid, testAmount)
+
+	solId, err := sh.UseCase.InsertSolution(uid, sln.SourceCode, testAmount)
 
 	ss := models.SolutionSend{
 		Id:         solId,

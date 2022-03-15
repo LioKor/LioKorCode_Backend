@@ -336,7 +336,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels2(in *jlexer.Lexer, out *So
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(SolutionsSQL, 0, 1)
+				*out = make(SolutionsSQL, 0, 0)
 			} else {
 				*out = SolutionsSQL{}
 			}
@@ -402,7 +402,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels3(in *jlexer.Lexer, out *So
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(Solutions, 0, 1)
+				*out = make(Solutions, 0, 0)
 			} else {
 				*out = Solutions{}
 			}
@@ -645,12 +645,14 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels6(in *jlexer.Lexer, out *So
 			continue
 		}
 		switch key {
-		case "checkResult":
+		case "Id":
 			out.Id = uint64(in.Uint64())
 		case "ReceivedDateTime":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
 			}
+		case "SourceCode":
+			out.SourceCode = string(in.String())
 		case "TaskId":
 			out.TaskId = uint64(in.Uint64())
 		case "CheckResult":
@@ -674,7 +676,7 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels6(out *jwriter.Writer, in S
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"checkResult\":"
+		const prefix string = ",\"Id\":"
 		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.Id))
 	}
@@ -682,6 +684,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels6(out *jwriter.Writer, in S
 		const prefix string = ",\"ReceivedDateTime\":"
 		out.RawString(prefix)
 		out.Raw((in.ReceivedDateTime).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"SourceCode\":"
+		out.RawString(prefix)
+		out.String(string(in.SourceCode))
 	}
 	{
 		const prefix string = ",\"TaskId\":"
@@ -750,6 +757,8 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels7(in *jlexer.Lexer, out *So
 		switch key {
 		case "id":
 			out.Id = uint64(in.Uint64())
+		case "sourceCode":
+			out.SourceCode = string(in.String())
 		case "receivedDatetime":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
@@ -778,6 +787,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels7(out *jwriter.Writer, in S
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.Id))
+	}
+	{
+		const prefix string = ",\"sourceCode\":"
+		out.RawString(prefix)
+		out.String(string(in.SourceCode))
 	}
 	{
 		const prefix string = ",\"receivedDatetime\":"

@@ -4,6 +4,9 @@ github.com/aymerick/douceur/parser
 # github.com/georgysavva/scany v0.3.0
 github.com/georgysavva/scany/dbscan
 github.com/georgysavva/scany/pgxscan
+# github.com/gomodule/redigo v2.0.0+incompatible
+github.com/gomodule/redigo/internal
+github.com/gomodule/redigo/redis
 # github.com/gorilla/css v1.0.0
 github.com/gorilla/css/scanner
 # github.com/jackc/chunkreader/v2 v2.0.1
