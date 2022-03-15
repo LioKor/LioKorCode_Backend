@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Solution struct {
 	SourceCode string `json:"sourceCode"`
 }
@@ -21,18 +23,20 @@ type SolutionUpdate struct {
 }
 
 type SolutionSQL struct {
-	Id          uint64 `json:"checkResult"`
-	TaskId      uint64
-	CheckResult int
-	TestsPassed int
-	TestsTotal  int
+	Id               uint64 `json:"checkResult"`
+	ReceivedDateTime time.Time
+	TaskId           uint64
+	CheckResult      int
+	TestsPassed      int
+	TestsTotal       int
 }
 
 type SolutionOne struct {
-	Id          uint64 `json:"id"`
-	CheckResult int    `json:"checkResult"`
-	TestsPassed int    `json:"testsPassed"`
-	TestsTotal  int    `json:"testsTotal"`
+	Id               uint64    `json:"id"`
+	ReceivedDateTime time.Time `json:"receivedDatetime"`
+	CheckResult      int       `json:"checkResult"`
+	TestsPassed      int       `json:"testsPassed"`
+	TestsTotal       int       `json:"testsTotal"`
 }
 
 //easyjson:json
@@ -50,6 +54,7 @@ func (slnsSQL SolutionsSQL) ConvertToJson() Solutions {
 	for _, elem := range slnsSQL {
 		newElem := SolutionOne{}
 		newElem.Id = elem.Id
+		newElem.ReceivedDateTime = elem.ReceivedDateTime
 		newElem.CheckResult = elem.CheckResult
 		newElem.TestsPassed = elem.TestsPassed
 		newElem.TestsTotal = elem.TestsTotal

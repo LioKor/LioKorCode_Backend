@@ -402,7 +402,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels3(in *jlexer.Lexer, out *So
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(Solutions, 0, 2)
+				*out = make(Solutions, 0, 1)
 			} else {
 				*out = Solutions{}
 			}
@@ -647,6 +647,10 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels6(in *jlexer.Lexer, out *So
 		switch key {
 		case "checkResult":
 			out.Id = uint64(in.Uint64())
+		case "ReceivedDateTime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
+			}
 		case "TaskId":
 			out.TaskId = uint64(in.Uint64())
 		case "CheckResult":
@@ -673,6 +677,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels6(out *jwriter.Writer, in S
 		const prefix string = ",\"checkResult\":"
 		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.Id))
+	}
+	{
+		const prefix string = ",\"ReceivedDateTime\":"
+		out.RawString(prefix)
+		out.Raw((in.ReceivedDateTime).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"TaskId\":"
@@ -741,6 +750,10 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels7(in *jlexer.Lexer, out *So
 		switch key {
 		case "id":
 			out.Id = uint64(in.Uint64())
+		case "receivedDatetime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
+			}
 		case "checkResult":
 			out.CheckResult = int(in.Int())
 		case "testsPassed":
@@ -765,6 +778,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels7(out *jwriter.Writer, in S
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.Id))
+	}
+	{
+		const prefix string = ",\"receivedDatetime\":"
+		out.RawString(prefix)
+		out.Raw((in.ReceivedDateTime).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"checkResult\":"

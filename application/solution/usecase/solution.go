@@ -3,6 +3,7 @@ package usecase
 import (
 	"liokoredu/application/models"
 	"liokoredu/application/solution"
+	"time"
 )
 
 type SolutionUseCase struct {
@@ -23,7 +24,10 @@ func (sd *SolutionUseCase) UpdateSolution(id uint64, code int, tests int) error 
 }
 
 func (s *SolutionUseCase) InsertSolution(taskId uint64, testsTotal int) (uint64, error) {
-	return s.repo.InsertSolution(taskId, testsTotal)
+	location, _ := time.LoadLocation("Europe/London")
+
+	received := time.Now().In(location)
+	return s.repo.InsertSolution(taskId, testsTotal, received)
 }
 
 func NewSolutionUseCase(s solution.Repository) solution.UseCase {

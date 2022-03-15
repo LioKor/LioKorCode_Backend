@@ -54,4 +54,6 @@ psql -c "CREATE USER lk WITH superuser login password 'liokor';"
     createdb -O android moviedb && \
     psql -d proxy < ./database.sql && \
     service postgresql stop
+
+    alter table solutions add column received_date_time TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
     */
