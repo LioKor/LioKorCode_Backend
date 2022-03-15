@@ -10,7 +10,12 @@ type SolutionUseCase struct {
 }
 
 func (sd *SolutionUseCase) GetSolutions(taskId uint64) (models.Solutions, error) {
-	return sd.repo.GetSolutions(taskId)
+	slnsSQL, err := sd.repo.GetSolutions(taskId)
+	if err != nil {
+		return models.Solutions{}, err
+	}
+
+	return slnsSQL.ConvertToJson(), nil
 }
 
 func (sd *SolutionUseCase) UpdateSolution(id uint64, code int, tests int) error {

@@ -19,17 +19,17 @@ type SolutionDatabase struct {
 }
 
 // GetSolutions implements solution.Repository
-func (sd *SolutionDatabase) GetSolutions(taskId uint64) (models.Solutions, error) {
-	var sln []models.SolutionSQL
+func (sd *SolutionDatabase) GetSolutions(taskId uint64) (models.SolutionsSQL, error) {
+	var sln models.SolutionsSQL
 	err := pgxscan.Select(context.Background(), sd.pool, &sln,
 		`SELECT * FROM solutions WHERE task_id = $1`, taskId)
 	log.Println(err)
 	if errors.As(err, &pgx.ErrNoRows) || len(sln) == 0 {
-		return models.Solutions{}, echo.NewHTTPError(http.StatusNotFound, errors.New("not found"))
+		return models.SolutionsSQL{}, echo.NewHTTPError(http.StatusNotFound, errors.New("not found"))
 	}
 
 	if err != nil {
-		return models.Solutions{}, err
+		return models.SolutionsSQL{}, err
 	}
 
 	slns := sln
