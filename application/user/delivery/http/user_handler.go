@@ -11,8 +11,23 @@ type UserHandler struct {
 }
 
 func CreateUserHandler(e *echo.Echo, uc user.UseCase) {
-	_ = UserHandler{
+	userHandler := UserHandler{
 		uc: uc,
 	}
 
+	e.GET("/api/v1/users/get", userHandler.getUser)
+	e.POST("/api/v1/users/store", userHandler.storeSession)
+
+}
+
+func (uh *UserHandler) getUser(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	return nil
+}
+
+func (uh *UserHandler) storeSession(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	return nil
 }
