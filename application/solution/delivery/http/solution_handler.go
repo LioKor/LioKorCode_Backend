@@ -84,7 +84,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	//ans := &models.SolutionId{Id: solId}
+	//ans := &models.ReturnId{Id: solId}
 	//if _, err = easyjson.MarshalToWriter(ans, c.Response().Writer); err != nil {
 	//	log.Println(c, err)
 	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

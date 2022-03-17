@@ -47,7 +47,7 @@ type Solutions []SolutionOne
 //easyjson:json
 type SolutionsSQL []SolutionSQL
 
-type SolutionId struct {
+type ReturnId struct {
 	Id uint64 `json:"id"`
 }
 

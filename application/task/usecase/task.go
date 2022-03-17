@@ -9,6 +9,20 @@ type TaskUseCase struct {
 	repo task.Repository
 }
 
+func (uc *TaskUseCase) GetTasks(page int) (*models.Tasks, error) {
+	tsks, err := uc.repo.GetTasks(page)
+	if err != nil {
+		return &models.Tasks{}, err
+	}
+
+	return tsks.ConvertToTasks(), nil
+}
+
+// CreateTask implements task.UseCase
+func (uc *TaskUseCase) CreateTask(t *models.TaskNew) (uint64, error) {
+	return uc.repo.CreateTask(t.ConvertNewTaskToTaskSQL())
+}
+
 func NewTaskUseCase(t task.Repository) task.UseCase {
 	return &TaskUseCase{repo: t}
 }

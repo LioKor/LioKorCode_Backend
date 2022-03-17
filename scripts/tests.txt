@@ -1,0 +1,13 @@
+some good text for testing
+
+{
+  "title": "new incredible task",
+  "description": "new incredible descriprion",
+  "input": "some good input",
+  "output": "some good output",
+  "hints": "some usefull hints",
+  "tests": [["1 2", "3"], ["3 4", "7"]],
+  "creator": 1,
+  "is_private": false,
+  "code": ""
+}
