@@ -26,11 +26,44 @@ func CreateUserHandler(e *echo.Echo, uc user.UseCase) {
 	e.POST("/api/v1/users/store", userHandler.storeSession)
 	e.POST("/api/v1/users", userHandler.createUser)
 	e.POST("/api/v1/user/auth", userHandler.login)
+	e.GET("/api/v1/user", userHandler.getUserProfile)
 	e.DELETE("/api/v1/user/session", userHandler.logout)
 }
 
 func (uh *UserHandler) getUser(c echo.Context) error {
 	defer c.Request().Body.Close()
+
+	return nil
+}
+
+func (uh *UserHandler) getUserProfile(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: getUserProfile: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		log.Println("user handler: logout: no cookie")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	uid, err := uh.uc.CheckSession(cookie.Value)
+	if err != nil {
+		return err
+	}
+
+	usr, err := uh.uc.GetUserByUid(uid)
+	if err != nil {
+		return err
+	}
+
+	if _, err = easyjson.MarshalToWriter(usr, c.Response().Writer); err != nil {
+		log.Println(c, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	return nil
 }

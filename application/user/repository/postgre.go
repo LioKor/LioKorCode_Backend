@@ -54,8 +54,8 @@ func (ud *UserDatabase) CheckUser(usr models.UserAuth) (*models.User, error) {
 func (ud *UserDatabase) InsertUser(usr models.User) (uint64, error) {
 	var id uint64
 	err := ud.pool.QueryRow(context.Background(),
-		`INSERT INTO users (username, email, password, fullname) VALUES ($1, $2, $3, $4) RETURNING id`,
-		usr.Username, usr.Email, usr.Password, usr.Fullname).Scan(&id)
+		`INSERT INTO users (username, email, password, fullname, joined_date) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+		usr.Username, usr.Email, usr.Password, usr.Fullname, usr.JoinedDate).Scan(&id)
 	if err != nil {
 		log.Println("user repository: InsertUser: error inserting user:", err)
 		return 0, err
@@ -72,6 +72,18 @@ func (ud *UserDatabase) GetUserByUsernameOrEmail(username string, email string) 
 		username, email)
 	if err != nil {
 		log.Println("user repository: GetUserByUsernameOrEmail: error getting user", err)
+		return nil, err
+	}
+
+	return &usrs[0], nil
+}
+
+func (ud *UserDatabase) GetUserByUid(uid uint64) (*models.User, error) {
+	var usrs models.Users
+	err := pgxscan.Select(context.Background(), ud.pool, &usrs,
+		`SELECT * FROM users WHERE id = $1`, uid)
+	if err != nil {
+		log.Println("user repository: GetUserByUid: error getting user", err)
 		return nil, err
 	}
 

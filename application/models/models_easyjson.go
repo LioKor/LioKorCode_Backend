@@ -193,6 +193,14 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels2(in *jlexer.Lexer, out *Us
 			out.Password = string(in.String())
 		case "email":
 			out.Fullname = string(in.String())
+		case "avatarUrl":
+			out.AvatarUrl = string(in.String())
+		case "joinedDate":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.JoinedDate).UnmarshalJSON(data))
+			}
+		case "isAdmin":
+			out.IsAdmin = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -231,6 +239,21 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels2(out *jwriter.Writer, in U
 		const prefix string = ",\"email\":"
 		out.RawString(prefix)
 		out.String(string(in.Fullname))
+	}
+	{
+		const prefix string = ",\"avatarUrl\":"
+		out.RawString(prefix)
+		out.String(string(in.AvatarUrl))
+	}
+	{
+		const prefix string = ",\"joinedDate\":"
+		out.RawString(prefix)
+		out.Raw((in.JoinedDate).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"isAdmin\":"
+		out.RawString(prefix)
+		out.String(string(in.IsAdmin))
 	}
 	out.RawByte('}')
 }

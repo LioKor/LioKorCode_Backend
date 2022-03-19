@@ -6,12 +6,18 @@ import (
 	"liokoredu/pkg/constants"
 	"liokoredu/pkg/generators"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo"
 )
 
 type UserUseCase struct {
 	repo user.Repository
+}
+
+// GetUserByUid implements user.UseCase
+func (uuc *UserUseCase) GetUserByUid(uid uint64) (*models.User, error) {
+	return uuc.repo.GetUserByUid(uid)
 }
 
 // DeleteSession implements user.UseCase
@@ -45,6 +51,10 @@ func (uuc *UserUseCase) CreateUser(usr models.User) (uint64, error) {
 	if u != nil {
 		return 0, echo.NewHTTPError(409, err)
 	}
+
+	location, _ := time.LoadLocation("Europe/London")
+	usr.JoinedDate = time.Now().In(location)
+
 	usr.Password = generators.HashPassword(usr.Password)
 
 	uid, err := uuc.repo.InsertUser(usr)
