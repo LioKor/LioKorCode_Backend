@@ -20,10 +20,10 @@ type SolutionDatabase struct {
 }
 
 // GetSolutions implements solution.Repository
-func (sd *SolutionDatabase) GetSolutions(taskId uint64) (models.SolutionsSQL, error) {
+func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.SolutionsSQL, error) {
 	var sln models.SolutionsSQL
 	err := pgxscan.Select(context.Background(), sd.pool, &sln,
-		`SELECT * FROM solutions WHERE task_id = $1`, taskId)
+		`SELECT * FROM solutions WHERE task_id = $1 AND uid = $2`, taskId, uid)
 	log.Println(err)
 	if errors.As(err, &pgx.ErrNoRows) || len(sln) == 0 {
 		return models.SolutionsSQL{}, echo.NewHTTPError(http.StatusNotFound, errors.New("not found"))
@@ -52,14 +52,14 @@ func (sd *SolutionDatabase) UpdateSolution(id uint64, code int, tests int) error
 	return nil
 }
 
-func (sd *SolutionDatabase) InsertSolution(taskId uint64, code string,
+func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code string,
 	testsTotal int, receivedTime time.Time) (uint64, error) {
 	var id uint64
 	err := sd.pool.QueryRow(context.Background(),
 		`INSERT INTO solutions (task_id, check_result, tests_passed, tests_total, 
-			received_date_time, source_code) 
-		VALUES ($1, 1, 0, $2, $3, $4) RETURNING id`,
-		taskId, testsTotal, receivedTime, code).Scan(&id)
+			received_date_time, source_code, uid) 
+		VALUES ($1, 1, 0, $2, $3, $4, $5) RETURNING id`,
+		taskId, testsTotal, receivedTime, code, uid).Scan(&id)
 	if err != nil {
 		log.Println(err)
 		return 0, echo.NewHTTPError(http.StatusBadRequest, err.Error())

@@ -3,6 +3,7 @@ package http
 import (
 	"liokoredu/application/models"
 	"liokoredu/application/task"
+	"liokoredu/application/user"
 	"liokoredu/pkg/constants"
 	"log"
 	"net/http"
@@ -14,16 +15,18 @@ import (
 )
 
 type TaskHandler struct {
-	uc task.UseCase
+	uc  task.UseCase
+	uuc user.UseCase
 }
 
 func CreateTaskHandler(e *echo.Echo,
-	uc task.UseCase) {
+	uc task.UseCase, uuc user.UseCase) {
 	taskHandler := TaskHandler{
-		uc: uc,
+		uc:  uc,
+		uuc: uuc,
 	}
 	e.GET("/api/v1/tasks/:id", taskHandler.getTask)
-	e.POST("/api/v1/tasks/create", taskHandler.createTask)
+	e.POST("/api/v1/tasks", taskHandler.createTask)
 	e.GET("/api/v1/tasks", taskHandler.getTasks)
 
 }
@@ -72,12 +75,35 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 func (th *TaskHandler) createTask(c echo.Context) error {
 	defer c.Request().Body.Close()
 
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: createTask: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		log.Println("user handler: createTask: no cookie")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	uid, err := th.uuc.CheckSession(cookie.Value)
+	if err != nil {
+		return err
+	}
+
+	if uid == 0 {
+		log.Println("user handler: createTask: uid 0")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
 	tn := &models.TaskNew{}
 
 	if err := easyjson.UnmarshalFromReader(c.Request().Body, tn); err != nil {
 		log.Println("task handler: createTask: error unmarshaling task from reader", err)
 		return echo.NewHTTPError(http.StatusTeapot, err.Error())
 	}
+
+	tn.Creator = uid
 
 	tid, err := th.uc.CreateTask(tn)
 	if err != nil {

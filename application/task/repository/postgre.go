@@ -23,7 +23,7 @@ type TaskDatabase struct {
 func (td *TaskDatabase) GetTasks(page int) (*models.TasksSQL, error) {
 	var t models.TasksSQL
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT * FROM tasks ORDER BY id DESC LIMIT $1 OFFSET $2`,
+		`SELECT * FROM tasks WHERE is_private = false ORDER BY id DESC LIMIT $1 OFFSET $2`,
 		constants.TasksPerPage, (page-1)*constants.TasksPerPage)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)

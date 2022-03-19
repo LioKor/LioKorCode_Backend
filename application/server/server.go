@@ -61,8 +61,8 @@ func NewServer() *Server {
 	taskUC := tuc.NewTaskUseCase(taskRep)
 
 	uhttp.CreateUserHandler(e, userUC)
-	slhttp.CreateSolutionHandler(e, solutionUC, taskUC)
-	thttp.CreateTaskHandler(e, taskUC)
+	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
+	thttp.CreateTaskHandler(e, taskUC, userUC)
 
 	server.e = e
 	return &server

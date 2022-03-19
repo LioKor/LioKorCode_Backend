@@ -38,7 +38,7 @@ func (uh *UserHandler) getUserProfile(c echo.Context) error {
 	}
 
 	if cookie == nil {
-		log.Println("user handler: logout: no cookie")
+		log.Println("user handler: getUserProfile: no cookie")
 		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
 	}
 
