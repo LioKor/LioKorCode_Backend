@@ -86,7 +86,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	}
 
 	reqBody, err := json.Marshal(ss)
-	resp, err := http.Post("http://167.172.51.136:7070/check_task/long",
+	resp, err := http.Post("http://10.106.0.2/check_task/long",
 		"application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		print(err)
