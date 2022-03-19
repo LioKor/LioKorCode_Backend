@@ -32,7 +32,7 @@ func (uuc *UserUseCase) LoginUser(usr models.UserAuth) (uint64, error) {
 		return 0, err
 	}
 	if u == nil {
-		return 0, echo.NewHTTPError(http.StatusNotFound, "user does not exists")
+		return 0, echo.NewHTTPError(http.StatusForbidden, "invalid login or password")
 	}
 	if !(generators.CheckHashedPassword(u.Password, usr.Password)) {
 		return 0, echo.NewHTTPError(http.StatusForbidden, "invalid login or password")

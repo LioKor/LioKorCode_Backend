@@ -7,10 +7,10 @@ type User struct {
 	Username   string    `json:"username"`
 	Email      string    `json:"email"`
 	Password   string    `json:"password"`
-	Fullname   string    `json:"email"`
+	Fullname   string    `json:"fullname"`
 	AvatarUrl  string    `json:"avatarUrl"`
 	JoinedDate time.Time `json:"joinedDate"`
-	IsAdmin    string    `json:"isAdmin"`
+	IsAdmin    bool      `json:"isAdmin"`
 }
 
 type UserAuth struct {

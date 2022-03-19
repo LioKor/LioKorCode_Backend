@@ -22,18 +22,10 @@ func CreateUserHandler(e *echo.Echo, uc user.UseCase) {
 		uc: uc,
 	}
 
-	e.GET("/api/v1/users/get", userHandler.getUser)
-	e.POST("/api/v1/users/store", userHandler.storeSession)
 	e.POST("/api/v1/users", userHandler.createUser)
 	e.POST("/api/v1/user/auth", userHandler.login)
 	e.GET("/api/v1/user", userHandler.getUserProfile)
 	e.DELETE("/api/v1/user/session", userHandler.logout)
-}
-
-func (uh *UserHandler) getUser(c echo.Context) error {
-	defer c.Request().Body.Close()
-
-	return nil
 }
 
 func (uh *UserHandler) getUserProfile(c echo.Context) error {
@@ -64,12 +56,6 @@ func (uh *UserHandler) getUserProfile(c echo.Context) error {
 		log.Println(c, err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-
-	return nil
-}
-
-func (uh *UserHandler) storeSession(c echo.Context) error {
-	defer c.Request().Body.Close()
 
 	return nil
 }
