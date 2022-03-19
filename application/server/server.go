@@ -52,7 +52,7 @@ func NewServer() *Server {
 		},
 	}
 
-	userRep := urep.NewUserDatabase(redisPool)
+	userRep := urep.NewUserDatabase(redisPool, pool)
 	solutionRep := slrep.NewSolutionDatabase(pool)
 	taskRep := trep.NewTaskDatabase(pool)
 

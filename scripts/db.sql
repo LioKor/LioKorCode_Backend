@@ -32,6 +32,20 @@ CREATE TABLE solutions
     tests_total       int not null
 );
 
+CREATE TABLE users
+(
+    id       bigserial primary key,
+    username     varchar(60) not null,
+    password varchar(60) not null,
+    email    varchar(100) not null,
+    fullname    varchar(100) not null,
+    UNIQUE(username), UNIQUE(email)
+);
+
+ALTER TABLE users ADD COLUMN avatar_url text not null default '/media/avatars/default.jpg';
+ALTER TABLE users ADD COLUMN joined_date TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
+ALTER TABLE users ADD COLUMN is_admin boolean not null default false;
+
 /*
 CREATE TABLE solutions
 (
