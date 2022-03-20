@@ -78,7 +78,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	log.Println(sln.SourceCode)
 	testAmount := task.TestsAmount
 
-	solId, err := sh.UseCase.InsertSolution(iid, uid, sln.SourceCode, testAmount)
+	solId, err := sh.UseCase.InsertSolution(iid, uid, sln.SourceCode, sln.Makefile, testAmount)
 
 	ss := models.SolutionSend{
 		Id:         solId,
@@ -98,9 +98,6 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 		print(err)
 	}
 
-	log.Println(string(body))
-	c.Response().Write(body)
-
 	update := &models.SolutionUpdate{}
 
 	_ = json.Unmarshal(body, update)
@@ -109,11 +106,11 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	//ans := &models.ReturnId{Id: solId}
-	//if _, err = easyjson.MarshalToWriter(ans, c.Response().Writer); err != nil {
-	//	log.Println(c, err)
-	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	//}
+	ans := &models.ReturnId{Id: solId}
+	if _, err = easyjson.MarshalToWriter(ans, c.Response().Writer); err != nil {
+		log.Println(c, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	return nil
 }
@@ -144,12 +141,12 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
-		log.Println("user handler: PostSolution: error getting cookie")
+		log.Println("user handler: GetSolutions: error getting cookie")
 		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
 	}
 
 	if cookie == nil {
-		log.Println("user handler: PostSolution: no cookie")
+		log.Println("user handler: GetSolutions: no cookie")
 		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
 	}
 
@@ -159,7 +156,7 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	}
 
 	if uid == 0 {
-		log.Println("user handler: PostSolution: uid 0")
+		log.Println("user handler: GetSolutions: uid 0")
 		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
 	}
 

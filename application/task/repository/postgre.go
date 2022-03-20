@@ -19,6 +19,26 @@ type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
+// UpdateTask implements task.Repository
+func (td *TaskDatabase) UpdateTask(t *models.TaskSQL) error {
+	resp, err := td.pool.Exec(context.Background(),
+		`UPDATE tasks set title = $1, description = $2, hints = $3, 
+		input = $4, output = $5, test_amount = $6, tests = $7 WHERE creator = $8 AND id = $9;`,
+		t.Title, t.Description, t.Hints, t.Input, t.Output, t.TestAmount, t.Tests, t.Creator,
+		t.Id)
+
+	if err != nil {
+		log.Println("task repository: UpdateTask: error updating task:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "no task from user")
+	}
+
+	return nil
+}
+
 // DeleteTask implements task.Repository
 func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 	resp, err := td.pool.Exec(context.Background(),

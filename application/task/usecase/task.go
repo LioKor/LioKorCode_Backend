@@ -9,6 +9,13 @@ type TaskUseCase struct {
 	repo task.Repository
 }
 
+// UpdateTask implements task.UseCase
+func (tuc *TaskUseCase) UpdateTask(id uint64, t *models.TaskNew) error {
+	tsk := t.ConvertNewTaskToTaskSQL()
+	tsk.Id = id
+	return tuc.repo.UpdateTask(tsk)
+}
+
 // DeleteTask implements task.UseCase
 func (tuc *TaskUseCase) DeleteTask(id uint64, uid uint64) error {
 	return tuc.repo.DeleteTask(id, uid)

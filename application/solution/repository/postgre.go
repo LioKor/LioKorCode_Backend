@@ -73,7 +73,7 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 // UpdateSolution implements solution.Repository
 func (sd *SolutionDatabase) UpdateSolution(id uint64, code int, tests int) error {
 	_, err := sd.pool.Exec(context.Background(),
-		`UPDATE solutions SET "check_result" = $1, "tests_passed" = $2 WHERE id = $3`,
+		`UPDATE solutions SET "check_result" = $1, "tests_passed" = $2, "task_updated" = false WHERE id = $3`,
 		code, tests, id)
 
 	if err != nil {
@@ -84,14 +84,14 @@ func (sd *SolutionDatabase) UpdateSolution(id uint64, code int, tests int) error
 	return nil
 }
 
-func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code string,
+func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code string, makefile string,
 	testsTotal int, receivedTime time.Time) (uint64, error) {
 	var id uint64
 	err := sd.pool.QueryRow(context.Background(),
 		`INSERT INTO solutions (task_id, check_result, tests_passed, tests_total, 
-			received_date_time, source_code, uid) 
-		VALUES ($1, 1, 0, $2, $3, $4, $5) RETURNING id`,
-		taskId, testsTotal, receivedTime, code, uid).Scan(&id)
+			received_date_time, source_code, uid, makefile) 
+		VALUES ($1, 1, 0, $2, $3, $4, $5, $6) RETURNING id`,
+		taskId, testsTotal, receivedTime, code, uid, makefile).Scan(&id)
 	if err != nil {
 		log.Println(err)
 		return 0, echo.NewHTTPError(http.StatusBadRequest, err.Error())
