@@ -30,6 +30,7 @@ type SolutionSQL struct {
 	CheckResult      int
 	TestsPassed      int
 	TestsTotal       int
+	Uid              uint64
 }
 
 type SolutionOne struct {

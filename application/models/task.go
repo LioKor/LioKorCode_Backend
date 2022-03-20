@@ -18,6 +18,16 @@ type Task struct {
 	Tests       InputTests `json:"tests"`
 }
 
+type ShortTask struct {
+	Id          uint64 `json:"id"`
+	Title       string `json:"name"`
+	Description string `json:"description"`
+	TestAmount  int    `json:"testsAmount"`
+}
+
+//easyjson:json
+type ShortTasks []ShortTask
+
 type TaskNew struct {
 	Title       string     `json:"name"`
 	Description string     `json:"description"`
@@ -64,6 +74,8 @@ func (tsql TaskSQL) ConvertToTask() *Task {
 	if err != nil {
 		log.Println("error converting tests: ", err)
 	}
+
+	t.Tests = t.Tests[:2]
 
 	return t
 }

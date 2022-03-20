@@ -9,13 +9,18 @@ type TaskUseCase struct {
 	repo task.Repository
 }
 
-func (uc *TaskUseCase) GetTasks(page int) (*models.Tasks, error) {
+// DeleteTask implements task.UseCase
+func (tuc *TaskUseCase) DeleteTask(id uint64, uid uint64) error {
+	return tuc.repo.DeleteTask(id, uid)
+}
+
+func (uc *TaskUseCase) GetTasks(page int) (*models.ShortTasks, error) {
 	tsks, err := uc.repo.GetTasks(page)
 	if err != nil {
-		return &models.Tasks{}, err
+		return &models.ShortTasks{}, err
 	}
 
-	return tsks.ConvertToTasks(), nil
+	return tsks, nil
 }
 
 // CreateTask implements task.UseCase

@@ -19,15 +19,35 @@ type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
+// DeleteTask implements task.Repository
+func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
+	resp, err := td.pool.Exec(context.Background(),
+		`DELETE from tasks WHERE id = $1 AND creator = $2`,
+		id, uid)
+
+	if err != nil {
+		log.Println("task repo: DeleteTask: error deleting task:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		log.Println("task repo: DeleteTask: error deleting task: no task to delete")
+		return echo.NewHTTPError(http.StatusNotFound, "task with taskId from this user not found")
+	}
+
+	return nil
+}
+
 // GetTasks implements task.Repository
-func (td *TaskDatabase) GetTasks(page int) (*models.TasksSQL, error) {
-	var t models.TasksSQL
+func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
+	var t models.ShortTasks
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT * FROM tasks WHERE is_private = false ORDER BY id DESC LIMIT $1 OFFSET $2`,
+		`SELECT id, title, description, test_amount FROM tasks WHERE 
+		is_private = false ORDER BY id DESC LIMIT $1 OFFSET $2`,
 		constants.TasksPerPage, (page-1)*constants.TasksPerPage)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
-		return &models.TasksSQL{}, err
+		return &models.ShortTasks{}, err
 	}
 
 	return &t, nil

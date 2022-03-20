@@ -10,6 +10,11 @@ type SolutionUseCase struct {
 	repo solution.Repository
 }
 
+// DeleteSolution implements solution.UseCase
+func (suc *SolutionUseCase) DeleteSolution(id uint64, uid uint64) error {
+	return suc.repo.DeleteSolution(id, uid)
+}
+
 func (sd *SolutionUseCase) GetSolutions(taskId uint64, uid uint64) (models.Solutions, error) {
 	slnsSQL, err := sd.repo.GetSolutions(taskId, uid)
 	if err != nil {

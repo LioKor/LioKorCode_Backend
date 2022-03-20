@@ -45,11 +45,11 @@ func (uuc *UserUseCase) LoginUser(usr models.UserAuth) (uint64, error) {
 func (uuc *UserUseCase) CreateUser(usr models.User) (uint64, error) {
 	u, err := uuc.GetUserByUsernameOrEmail(usr.Username, usr.Email)
 	if err != nil {
-		return 0, echo.NewHTTPError(500, err)
+		return 0, echo.NewHTTPError(500, err.Error())
 	}
 
 	if u != nil {
-		return 0, echo.NewHTTPError(409, err)
+		return 0, echo.NewHTTPError(409, "user with this usermame or email already exists")
 	}
 
 	location, _ := time.LoadLocation("Europe/London")
@@ -59,7 +59,7 @@ func (uuc *UserUseCase) CreateUser(usr models.User) (uint64, error) {
 
 	uid, err := uuc.repo.InsertUser(usr)
 	if err != nil {
-		return 0, echo.NewHTTPError(400, err)
+		return 0, echo.NewHTTPError(400, err.Error())
 	}
 
 	return uid, nil

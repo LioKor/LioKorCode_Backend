@@ -34,6 +34,7 @@ func CreateSolutionHandler(e *echo.Echo,
 	e.POST("/api/v1/solutions/update/:id", solutionHandler.UpdateSolution)
 	e.GET("/api/v1/tasks/:id/solutions", solutionHandler.GetSolutions)
 	e.GET("/api/v1/tasks/:taskId/solutions/:solutionId", solutionHandler.GetSolutions)
+	e.DELETE("/api/v1/tasks/:taskId/solutions/:solutionId", solutionHandler.deleteSolution)
 }
 
 func (sh SolutionHandler) PostSolution(c echo.Context) error {
@@ -174,6 +175,41 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	if _, err = easyjson.MarshalToWriter(slns, c.Response().Writer); err != nil {
 		log.Println(c, err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (sh SolutionHandler) deleteSolution(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: deleteSolution: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		log.Println("user handler: deleteSolution: no cookie")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	uid, err := sh.uuc.CheckSession(cookie.Value)
+	if err != nil {
+		return err
+	}
+
+	if uid == 0 {
+		log.Println("user handler: deleteSolution: uid 0")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	id := c.Param(constants.SolutionId)
+	iid, _ := strconv.ParseUint(string(id), 10, 64)
+
+	err = sh.UseCase.DeleteSolution(iid, uid)
+	if err != nil {
+		return err
 	}
 
 	return nil
