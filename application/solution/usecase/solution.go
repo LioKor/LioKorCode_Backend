@@ -3,11 +3,27 @@ package usecase
 import (
 	"liokoredu/application/models"
 	"liokoredu/application/solution"
+	"liokoredu/application/task"
 	"time"
 )
 
 type SolutionUseCase struct {
-	repo solution.Repository
+	repo   solution.Repository
+	ucTask task.UseCase
+}
+
+// GetSolution implements solution.UseCase
+func (suc *SolutionUseCase) GetSolution(solId uint64, taskId uint64, uid uint64) (models.SolutionFull, error) {
+	sln, err := suc.repo.GetSolution(solId, taskId, uid)
+	if err != nil {
+		return models.SolutionFull{}, err
+	}
+	tsk, err := suc.ucTask.GetTask(taskId)
+	if err != nil {
+		return models.SolutionFull{}, err
+	}
+
+	return sln.ConvertToFull(tsk), nil
 }
 
 // DeleteSolution implements solution.UseCase
@@ -35,6 +51,6 @@ func (s *SolutionUseCase) InsertSolution(taskId uint64, uid uint64, code string,
 	return s.repo.InsertSolution(taskId, uid, code, testsTotal, received)
 }
 
-func NewSolutionUseCase(s solution.Repository) solution.UseCase {
-	return &SolutionUseCase{repo: s}
+func NewSolutionUseCase(s solution.Repository, t task.UseCase) solution.UseCase {
+	return &SolutionUseCase{repo: s, ucTask: t}
 }

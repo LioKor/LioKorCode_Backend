@@ -45,6 +45,7 @@ CREATE TABLE users
 ALTER TABLE users ADD COLUMN avatar_url text not null default '/media/avatars/default.jpg';
 ALTER TABLE users ADD COLUMN joined_date TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
 ALTER TABLE users ADD COLUMN is_admin boolean not null default false;
+alter table solutions add column makefile text not null default '';
 
 /*
 CREATE TABLE solutions

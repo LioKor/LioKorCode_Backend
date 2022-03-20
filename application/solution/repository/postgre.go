@@ -22,9 +22,9 @@ type SolutionDatabase struct {
 func (sd *SolutionDatabase) GetSolution(id uint64, taskId uint64, uid uint64) (models.SolutionSQL, error) {
 	var sln models.SolutionsSQL
 	err := pgxscan.Select(context.Background(), sd.pool, &sln,
-		`SELECT * FROM solutions WHERE id = $1 AND task_id = $1 AND uid = $2`, id, taskId, uid)
+		`SELECT * FROM solutions WHERE id = $1 AND task_id = $2 AND uid = $3`, id, taskId, uid)
 	if errors.As(err, &pgx.ErrNoRows) && len(sln) == 0 {
-		log.Println("solution repo: GetSolution: error getting solution: no solutions")
+		log.Println("solution repo: GetSolution: error getting solution: no solution")
 		return models.SolutionSQL{}, nil
 	}
 	if err != nil {

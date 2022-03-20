@@ -57,8 +57,9 @@ func NewServer() *Server {
 	taskRep := trep.NewTaskDatabase(pool)
 
 	userUC := uuc.NewUserUseCase(userRep)
-	solutionUC := sluc.NewSolutionUseCase(solutionRep)
+
 	taskUC := tuc.NewTaskUseCase(taskRep)
+	solutionUC := sluc.NewSolutionUseCase(solutionRep, taskUC)
 
 	uhttp.CreateUserHandler(e, userUC)
 	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
