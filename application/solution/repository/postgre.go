@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/georgysavva/scany/pgxscan"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
 )
@@ -25,11 +25,16 @@ func (sd *SolutionDatabase) GetSolution(id uint64, taskId uint64, uid uint64) (m
 		`SELECT * FROM solutions WHERE id = $1 AND task_id = $2 AND uid = $3`, id, taskId, uid)
 	if errors.As(err, &pgx.ErrNoRows) && len(sln) == 0 {
 		log.Println("solution repo: GetSolution: error getting solution: no solution")
-		return models.SolutionSQL{}, nil
+		return models.SolutionSQL{}, echo.NewHTTPError(http.StatusNotFound, "solution for task from user not found")
 	}
 	if err != nil {
-		log.Println("solution repo: GetSolutions: error getting solutions:", err)
+		log.Println("solution repo: GetSolution: error getting solutions:", err)
 		return models.SolutionSQL{}, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if len(sln) == 0 {
+		log.Println("solution repo: GetSolution: error getting solution: no solution")
+		return models.SolutionSQL{}, echo.NewHTTPError(http.StatusNotFound, "solution for task from user not found")
 	}
 
 	return sln[0], nil
@@ -58,13 +63,20 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 	var sln models.SolutionsSQL
 	err := pgxscan.Select(context.Background(), sd.pool, &sln,
 		`SELECT * FROM solutions WHERE task_id = $1 AND uid = $2`, taskId, uid)
+
 	if errors.As(err, &pgx.ErrNoRows) && len(sln) == 0 {
 		log.Println("solution repo: GetSolutions: error getting solution: no solutions")
 		return models.SolutionsSQL{}, nil
 	}
+
 	if err != nil {
 		log.Println("solution repo: GetSolutions: error getting solutions:", err)
 		return models.SolutionsSQL{}, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if len(sln) == 0 {
+		log.Println("solution repo: GetSolutions: error getting solution: no solutions")
+		return models.SolutionsSQL{}, nil
 	}
 
 	return sln, nil

@@ -97,14 +97,16 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	if err != nil {
 		print(err)
 	}
+	log.Println(resp)
 
 	update := &models.SolutionUpdate{}
 
 	_ = json.Unmarshal(body, update)
 	err = sh.UseCase.UpdateSolution(solId, update.Code, update.Passed)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return err
 	}
+	log.Println(update)
 
 	ans := &models.ReturnId{Id: solId}
 	if _, err = easyjson.MarshalToWriter(ans, c.Response().Writer); err != nil {
@@ -129,8 +131,7 @@ func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 
 	err := sh.UseCase.UpdateSolution(uid, info.Code, info.Passed)
 	if err != nil {
-		log.Println(err)
-		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
+		return err
 	}
 
 	return nil
@@ -154,7 +155,6 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Println(uid)
 
 	if uid == 0 {
 		log.Println("user handler: GetSolutions: uid 0")
@@ -166,8 +166,7 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 
 	slns, err := sh.UseCase.GetSolutions(iid, uid)
 	if err != nil {
-		log.Println(err)
-		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
+		return err
 	}
 
 	if _, err = easyjson.MarshalToWriter(slns, c.Response().Writer); err != nil {

@@ -44,6 +44,8 @@ func CreateCookieWithValue(value string) *http.Cookie {
 		Value:    value,
 		Expires:  time.Now().Add(24 * 7 * time.Hour),
 		HttpOnly: true,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	return newCookie
@@ -54,8 +56,10 @@ func CreateCookie(n uint8) *http.Cookie {
 	newCookie := &http.Cookie{
 		Name:     constants.SessionCookieName,
 		Value:    key,
-		Expires:  time.Now().Add(10 * time.Hour),
+		Expires:  time.Now().Add(24 * 7 * time.Hour),
 		HttpOnly: true,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	return newCookie

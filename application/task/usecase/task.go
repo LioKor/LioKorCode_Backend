@@ -30,6 +30,15 @@ func (uc *TaskUseCase) GetTasks(page int) (*models.ShortTasks, error) {
 	return tsks, nil
 }
 
+func (uc *TaskUseCase) GetUserTasks(uid uint64, page int) (*models.ShortTasks, error) {
+	tsks, err := uc.repo.GetUserTasks(uid, page)
+	if err != nil {
+		return &models.ShortTasks{}, err
+	}
+
+	return tsks, nil
+}
+
 // CreateTask implements task.UseCase
 func (uc *TaskUseCase) CreateTask(t *models.TaskNew) (uint64, error) {
 	return uc.repo.CreateTask(t.ConvertNewTaskToTaskSQL())

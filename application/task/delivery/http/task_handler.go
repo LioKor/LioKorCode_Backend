@@ -28,6 +28,7 @@ func CreateTaskHandler(e *echo.Echo,
 	e.GET("/api/v1/tasks/:id", taskHandler.getTask)
 	e.POST("/api/v1/tasks", taskHandler.createTask)
 	e.GET("/api/v1/tasks", taskHandler.getTasks)
+	e.GET("/api/v1/tasks/user", taskHandler.getUserTasks)
 	e.DELETE("/api/v1/tasks/:id", taskHandler.deleteTask)
 	e.PUT("/api/v1/tasks/:id", taskHandler.updateTask)
 }
@@ -61,6 +62,49 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 	}
 
 	tsks, err := th.uc.GetTasks(p)
+	if err != nil {
+		return err
+	}
+
+	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
+		log.Println("task handler: getTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (th *TaskHandler) getUserTasks(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: createTask: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		log.Println("user handler: createTask: no cookie")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	uid, err := th.uuc.CheckSession(cookie.Value)
+	if err != nil {
+		return err
+	}
+
+	if uid == 0 {
+		log.Println("user handler: createTask: uid 0")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	tsks, err := th.uc.GetUserTasks(uid, p)
 	if err != nil {
 		return err
 	}

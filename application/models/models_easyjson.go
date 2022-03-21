@@ -1551,6 +1551,10 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels16(in *jlexer.Lexer, out *S
 			(out.Tests).UnmarshalEasyJSON(in)
 		case "makefile":
 			out.Makefile = string(in.String())
+		case "testsPassed":
+			out.TestsPassed = int(in.Int())
+		case "testsTotal":
+			out.TestsTotal = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -1599,6 +1603,16 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels16(out *jwriter.Writer, in 
 		const prefix string = ",\"makefile\":"
 		out.RawString(prefix)
 		out.String(string(in.Makefile))
+	}
+	{
+		const prefix string = ",\"testsPassed\":"
+		out.RawString(prefix)
+		out.Int(int(in.TestsPassed))
+	}
+	{
+		const prefix string = ",\"testsTotal\":"
+		out.RawString(prefix)
+		out.Int(int(in.TestsTotal))
 	}
 	out.RawByte('}')
 }

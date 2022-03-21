@@ -55,6 +55,8 @@ type SolutionFull struct {
 	CheckError       string      `json:"checkError"`
 	Tests            TestResults `json:"tests"`
 	Makefile         string      `json:"makefile"`
+	TestsPassed      int         `json:"testsPassed"`
+	TestsTotal       int         `json:"testsTotal"`
 }
 
 //easyjson:json
@@ -100,6 +102,8 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 	newElem.Id = slnSQL.Id
 	newElem.ReceivedDateTime = slnSQL.ReceivedDateTime
 	newElem.Makefile = slnSQL.Makefile
+	newElem.TestsPassed = slnSQL.TestsPassed
+	newElem.TestsTotal = slnSQL.TestsTotal
 	newElem.SourceCode = slnSQL.SourceCode
 	newElem.CheckResult = slnSQL.CheckResult
 	i := 0
@@ -107,7 +111,7 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 	for ; i < slnSQL.TestsPassed; i++ {
 		test := TestResult{}
 		test.Stdin = tsk.Tests[i][0]
-		test.Stdin = tsk.Tests[i][1]
+		test.Stdout = tsk.Tests[i][1]
 		test.Passed = true
 		tests = append(tests, test)
 	}
