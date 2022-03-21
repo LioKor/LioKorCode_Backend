@@ -42,7 +42,7 @@ func CreateCookieWithValue(value string) *http.Cookie {
 	newCookie := &http.Cookie{
 		Name:     constants.SessionCookieName,
 		Value:    value,
-		Expires:  time.Now().Add(72 * time.Hour),
+		Expires:  time.Now().Add(24 * 7 * time.Hour),
 		HttpOnly: true,
 	}
 

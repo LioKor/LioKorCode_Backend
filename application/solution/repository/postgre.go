@@ -73,7 +73,7 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 // UpdateSolution implements solution.Repository
 func (sd *SolutionDatabase) UpdateSolution(id uint64, code int, tests int) error {
 	_, err := sd.pool.Exec(context.Background(),
-		`UPDATE solutions SET "check_result" = $1, "tests_passed" = $2, "task_updated" = false WHERE id = $3`,
+		`UPDATE solutions SET "check_result" = $1, "tests_passed" = $2 WHERE id = $3`,
 		code, tests, id)
 
 	if err != nil {

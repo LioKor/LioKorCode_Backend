@@ -3,7 +3,7 @@ package user
 import "liokoredu/application/models"
 
 type Repository interface {
-	GetId(token string) (uint64, error)
+	//GetId(token string) (uint64, error)
 	StoreSession(token string, uid uint64) error
 	CheckSession(token string) (*uint64, error)
 	DeleteSession(token string) error

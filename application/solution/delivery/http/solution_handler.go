@@ -154,6 +154,7 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Println(uid)
 
 	if uid == 0 {
 		log.Println("user handler: GetSolutions: uid 0")

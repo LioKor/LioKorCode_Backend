@@ -119,6 +119,7 @@ func (ud *UserDatabase) CheckSession(token string) (*uint64, error) {
 	return &value, nil
 }
 
+/*
 func (ud *UserDatabase) GetId(token string) (uint64, error) {
 	client := ud.poolRedis.Get()
 	defer client.Close()
@@ -137,6 +138,7 @@ func (ud *UserDatabase) GetId(token string) (uint64, error) {
 
 	return uid.(uint64), nil
 }
+*/
 
 // DeleteSession implements user.Repository
 func (ud *UserDatabase) DeleteSession(token string) error {

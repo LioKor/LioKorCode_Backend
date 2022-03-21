@@ -89,9 +89,11 @@ func (uuc *UserUseCase) CheckSession(token string) (uint64, error) {
 	return 0, nil
 }
 
+/*
 func (uuc *UserUseCase) GetId(token string) (uint64, error) {
 	return uuc.repo.GetId(token)
 }
+*/
 
 func NewUserUseCase(u user.Repository) user.UseCase {
 	return &UserUseCase{repo: u}
