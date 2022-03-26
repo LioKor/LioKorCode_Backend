@@ -19,10 +19,11 @@ type SolutionSend struct {
 type InputTests [][]string
 
 type SolutionUpdate struct {
-	Code         int    `json:"checkResult"`
-	CheckMessage string `json:"checkMessage"`
-	Passed       int    `json:"testsPassed"`
-	TestsTotal   int    `json:"testsTotal"`
+	Code         int     `json:"checkResult"`
+	CheckMessage string  `json:"checkMessage"`
+	CheckTime    float32 `json:"checkTime"`
+	Passed       int     `json:"testsPassed"`
+	TestsTotal   int     `json:"testsTotal"`
 }
 
 type SolutionSQL struct {
@@ -31,6 +32,8 @@ type SolutionSQL struct {
 	SourceCode       string
 	TaskId           uint64
 	CheckResult      int
+	CheckTime        float32
+	CheckMessage     string
 	TestsPassed      int
 	TestsTotal       int
 	Uid              uint64
@@ -51,7 +54,8 @@ type SolutionFull struct {
 	SourceCode       string      `json:"sourceCode"`
 	ReceivedDateTime time.Time   `json:"receivedDatetime"`
 	CheckResult      int         `json:"checkResult"`
-	CheckError       string      `json:"checkError"`
+	CheckMessage     string      `json:"checkError"`
+	CheckTime        float32     `json:"checkTime"`
 	Tests            TestResults `json:"tests"`
 	Makefile         string      `json:"makefile"`
 	TestsPassed      int         `json:"testsPassed"`
@@ -105,6 +109,8 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 	newElem.TestsTotal = slnSQL.TestsTotal
 	newElem.SourceCode = slnSQL.SourceCode
 	newElem.CheckResult = slnSQL.CheckResult
+	newElem.CheckMessage = slnSQL.CheckMessage
+	newElem.CheckTime = slnSQL.CheckTime
 	i := 0
 	tests := TestResults{}
 	for ; i < slnSQL.TestsPassed; i++ {
@@ -115,16 +121,14 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 		tests = append(tests, test)
 	}
 
-	/*
-		if slnSQL.TestsPassed < slnSQL.TestsTotal {
-			test := TestResult{}
+	if slnSQL.TestsPassed < slnSQL.TestsTotal {
+		test := TestResult{}
 
-			test.Stdin = tsk.Tests[i][0]
-			test.Stdout = tsk.Tests[i][1]
-			test.Passed = false
-			tests = append(tests, test)
-		}
-	*/
+		test.Stdin = tsk.Tests[i][0]
+		test.Stdout = tsk.Tests[i][1]
+		test.Passed = false
+		tests = append(tests, test)
+	}
 
 	newElem.Tests = tests
 

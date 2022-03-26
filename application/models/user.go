@@ -13,6 +13,7 @@ type User struct {
 	Fullname   string    `json:"fullname"`
 	AvatarUrl  string    `json:"avatarUrl"`
 	JoinedDate time.Time `json:"joinedDate"`
+	Verified   bool      `json:"verified"`
 	IsAdmin    bool      `json:"isAdmin"`
 }
 
