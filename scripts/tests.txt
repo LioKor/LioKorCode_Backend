@@ -1,13 +1,38 @@
 some good text for testing
 
 {
-  "title": "new incredible task",
-  "description": "new incredible descriprion",
-  "input": "some good input",
-  "output": "some good output",
-  "hints": "some usefull hints",
-  "tests": [["1 2", "3"], ["3 4", "7"]],
-  "creator": 1,
-  "is_private": false,
-  "code": ""
+  "title": "Sum of two numbers",
+  "description": "Two numbers are given, calculate their sum",
+  "stdinDescription": "-2^31 < a < 2^32, -2^31 < b < 2^32",
+  "stdoutDescription": "c=a+b",
+  "hints": "Very easy task",
+  "tests": [["1 2", "3"], ["3 4", "7"]]
+}
+
+{
+  "name": "Sum of two numbers",
+  "description": "Two numbers are given, calculate their sum",
+  "stdinDescription": "-2^31 < a < 2^32, -2^31 < b < 2^32",
+  "stdoutDescription": "c=a+b",
+  "hints": "Very easy task",
+  "tests": [["1 2", "3"], ["3 4", "7"]]
+}
+
+{
+  "name": "Change to uppercase",
+  "description": "Write a program that allows the user to enter a lowercase Latin letter in the console, translates it into uppercase and outputs the result to the console.",
+  "stdinDescription": "[a-z]",
+  "stdoutDescription": "[A-Z]",
+  "hints": "Very easy task",
+  "tests": [["a", "A"], ["b", "B"], ["z", "Z"]]
+}
+
+{
+ "sourceCode": "#include \"stdio.h\"\nint main() {\n    int a, b;\n\n    scanf(\"%d %d\", &a, &b);\n    \n    printf(\"%d\", a + b);\n    \n    return 0;\n}",
+ "makefile": "a.out:\n  gcc main.c"
+}
+
+{
+ "sourceCode": "#include \"stdio.h\"\nint main() {\n    char a;\n\n    scanf(\"%c", &a);\n    \n    printf(\"%d\", a - 32);\n    \n    return 0;\n}",
+ "makefile": "a.out:\n  gcc main.c"
 }

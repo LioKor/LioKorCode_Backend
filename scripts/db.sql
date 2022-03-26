@@ -47,6 +47,8 @@ ALTER TABLE users ADD COLUMN joined_date TIMESTAMP WITH TIME ZONE not null defau
 ALTER TABLE users ADD COLUMN is_admin boolean not null default false;
 alter table solutions add column makefile text not null default '';
 
+ALTER TABLE users ADD COLUMN verified boolean not null default false;
+
 CREATE FUNCTION update_solution() RETURNS trigger AS $update_solution$
     BEGIN
         UPDATE solutions SET check_result = 5 WHERE task_id = OLD.id;

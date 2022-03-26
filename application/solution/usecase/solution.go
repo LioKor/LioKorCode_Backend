@@ -18,7 +18,7 @@ func (suc *SolutionUseCase) GetSolution(solId uint64, taskId uint64, uid uint64)
 	if err != nil {
 		return models.SolutionFull{}, err
 	}
-	tsk, err := suc.ucTask.GetTask(taskId)
+	tsk, err := suc.ucTask.GetTask(taskId, uid)
 	if err != nil {
 		return models.SolutionFull{}, err
 	}

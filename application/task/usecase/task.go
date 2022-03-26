@@ -48,12 +48,17 @@ func NewTaskUseCase(t task.Repository) task.UseCase {
 	return &TaskUseCase{repo: t}
 }
 
-func (uc TaskUseCase) GetTask(id uint64) (*models.Task, error) {
+func (uc TaskUseCase) GetTask(id uint64, uid uint64) (*models.Task, error) {
 	t, err := uc.repo.GetTask(id)
 	if err != nil {
 		return &models.Task{}, err
 	}
 
-	tsk := t.ConvertToTask()
+	isCreator := false
+	if t.Creator == uid {
+		isCreator = true
+	}
+
+	tsk := t.ConvertToTask(isCreator)
 	return tsk, nil
 }

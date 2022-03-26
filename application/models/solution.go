@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"time"
 )
 
@@ -116,14 +115,16 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 		tests = append(tests, test)
 	}
 
-	if slnSQL.TestsPassed < slnSQL.TestsTotal {
-		test := TestResult{}
-		log.Println(tsk.Tests[i])
-		test.Stdin = tsk.Tests[i][0]
-		test.Stdout = tsk.Tests[i][1]
-		test.Passed = false
-		tests = append(tests, test)
-	}
+	/*
+		if slnSQL.TestsPassed < slnSQL.TestsTotal {
+			test := TestResult{}
+
+			test.Stdin = tsk.Tests[i][0]
+			test.Stdout = tsk.Tests[i][1]
+			test.Passed = false
+			tests = append(tests, test)
+		}
+	*/
 
 	newElem.Tests = tests
 

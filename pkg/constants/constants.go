@@ -12,6 +12,7 @@ const (
 	CookieLength      = uint8(32)
 	SessionCookieName = "SID"
 	SaltLength        = 8
+	PythonAddress     = "http://10.106.0.2/check_task/long"
 )
 
 var LetterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")

@@ -61,7 +61,7 @@ type TaskSQL struct {
 //easyjson:json
 type TasksSQL []TaskSQL
 
-func (tsql TaskSQL) ConvertToTask() *Task {
+func (tsql TaskSQL) ConvertToTask(isCreator bool) *Task {
 	t := &Task{}
 	t.Id = tsql.Id
 	t.Title = tsql.Title
@@ -75,7 +75,11 @@ func (tsql TaskSQL) ConvertToTask() *Task {
 		log.Println("error converting tests: ", err)
 	}
 
-	t.Tests = t.Tests[:2]
+	if !isCreator {
+		if len(t.Tests) >= 2 {
+			t.Tests = t.Tests[:2]
+		}
+	}
 
 	return t
 }
@@ -83,7 +87,7 @@ func (tsql TaskSQL) ConvertToTask() *Task {
 func (tsksSQL TasksSQL) ConvertToTasks() *Tasks {
 	tsks := Tasks{}
 	for _, elem := range tsksSQL {
-		tsks = append(tsks, *elem.ConvertToTask())
+		tsks = append(tsks, *elem.ConvertToTask(false))
 	}
 	return &tsks
 }
@@ -114,6 +118,29 @@ func (tn TaskNew) ConvertNewTaskToTaskSQL() *TaskSQL {
 	t.Date = received
 
 	return t
+}
+
+func (tn TaskNew) Validate() bool {
+	if len(tn.Title) == 0 {
+		return false
+	}
+	if len(tn.Description) == 0 {
+		return false
+	}
+	if len(tn.Hints) == 0 {
+		return false
+	}
+	if len(tn.Input) == 0 {
+		return false
+	}
+	if len(tn.Output) == 0 {
+		return false
+	}
+	if len(tn.Tests) < 2 {
+		return false
+	}
+
+	return true
 }
 
 func NewNullString(s string) sql.NullString {

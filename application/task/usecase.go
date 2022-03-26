@@ -3,7 +3,7 @@ package task
 import "liokoredu/application/models"
 
 type UseCase interface {
-	GetTask(id uint64) (*models.Task, error)
+	GetTask(id uint64, uid uint64) (*models.Task, error)
 	GetTasks(page int) (*models.ShortTasks, error)
 	GetUserTasks(uid uint64, page int) (*models.ShortTasks, error)
 	CreateTask(t *models.TaskNew) (uint64, error)

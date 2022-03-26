@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"net/mail"
+	"time"
+)
 
 type User struct {
 	Id         uint64
@@ -11,6 +14,31 @@ type User struct {
 	AvatarUrl  string    `json:"avatarUrl"`
 	JoinedDate time.Time `json:"joinedDate"`
 	IsAdmin    bool      `json:"isAdmin"`
+}
+
+func (u *User) Validate() bool {
+	if len(u.Username) < 6 || len(u.Username) > 30 {
+		return false
+	}
+
+	if len(u.Email) == 0 || !isValidEmail(u.Email) {
+		return false
+	}
+
+	if len(u.Password) < 6 || len(u.Password) > 30 {
+		return false
+	}
+
+	if len(u.Fullname) < 6 || len(u.Fullname) > 50 {
+		return false
+	}
+
+	return true
+}
+
+func isValidEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
 
 type UserAuth struct {

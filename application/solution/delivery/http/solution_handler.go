@@ -34,6 +34,7 @@ func CreateSolutionHandler(e *echo.Echo,
 	e.POST("/api/v1/solutions/update/:id", solutionHandler.UpdateSolution)
 	e.GET("/api/v1/tasks/:id/solutions", solutionHandler.GetSolutions)
 	e.GET("/api/v1/tasks/:taskId/solutions/:solutionId", solutionHandler.getSolution)
+	e.PUT("/api/v1/tasks/:taskId/solutions/:solutionId", solutionHandler.rerunSolution)
 	e.DELETE("/api/v1/tasks/:taskId/solutions/:solutionId", solutionHandler.deleteSolution)
 }
 
@@ -64,14 +65,13 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	sln := &models.Solution{}
 	id := c.Param(constants.IdKey)
 	iid, _ := strconv.ParseUint(string(id), 10, 64)
-	log.Println(iid)
 
 	if err := easyjson.UnmarshalFromReader(c.Request().Body, sln); err != nil {
 		log.Println(err)
 		return echo.NewHTTPError(http.StatusTeapot, err.Error())
 	}
 
-	task, err := sh.TUseCase.GetTask(iid)
+	task, err := sh.TUseCase.GetTask(iid, uid)
 	if err != nil {
 		return err
 	}
@@ -79,6 +79,9 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	testAmount := task.TestsAmount
 
 	solId, err := sh.UseCase.InsertSolution(iid, uid, sln.SourceCode, sln.Makefile, testAmount)
+	if err != nil {
+		return err
+	}
 
 	ss := models.SolutionSend{
 		Id:         solId,
@@ -87,7 +90,12 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	}
 
 	reqBody, err := json.Marshal(ss)
-	resp, err := http.Post("http://10.106.0.2/check_task/long",
+	if err != nil {
+		log.Println("user handler: postSolution: error marshaling SolutionSend", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	resp, err := http.Post(constants.PythonAddress,
 		"application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		print(err)
@@ -97,7 +105,6 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	if err != nil {
 		print(err)
 	}
-	log.Println(resp)
 
 	update := &models.SolutionUpdate{}
 
@@ -130,6 +137,79 @@ func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 	}
 
 	err := sh.UseCase.UpdateSolution(uid, info.Code, info.Passed)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (sh SolutionHandler) rerunSolution(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: rerunSolution: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		log.Println("user handler: rerunSolution: no cookie")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	uid, err := sh.uuc.CheckSession(cookie.Value)
+	if err != nil {
+		return err
+	}
+
+	if uid == 0 {
+		log.Println("user handler: rerunSolution: uid 0")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	}
+
+	tid := c.Param(constants.TaskId)
+	utid, _ := strconv.ParseUint(string(tid), 10, 64)
+
+	solId := c.Param(constants.SolutionId)
+	usolId, _ := strconv.ParseUint(string(solId), 10, 64)
+
+	sln, err := sh.UseCase.GetSolution(usolId, utid, uid)
+	if err != nil {
+		return err
+	}
+	tsk, err := sh.TUseCase.GetTask(utid, uid)
+	if err != nil {
+		return err
+	}
+
+	ss := models.SolutionSend{
+		Id:         usolId,
+		SourceCode: sln.SourceCode,
+		Tests:      models.InputTests(tsk.Tests),
+	}
+
+	reqBody, err := json.Marshal(ss)
+	if err != nil {
+		log.Println("user handler: rerunSolution: error marshaling SolutionSend", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	resp, err := http.Post(constants.PythonAddress,
+		"application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		print(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		print(err)
+	}
+
+	update := &models.SolutionUpdate{}
+
+	_ = json.Unmarshal(body, update)
+	err = sh.UseCase.UpdateSolution(usolId, update.Code, update.Passed)
 	if err != nil {
 		return err
 	}
@@ -170,8 +250,8 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	}
 
 	if _, err = easyjson.MarshalToWriter(slns, c.Response().Writer); err != nil {
-		log.Println(c, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		log.Println(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return nil
