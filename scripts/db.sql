@@ -32,6 +32,36 @@ CREATE TABLE solutions
     tests_total       int not null
 );
 
+CREATE TABLE users
+(
+    id       bigserial primary key,
+    username     varchar(60) not null,
+    password varchar(60) not null,
+    email    varchar(100) not null,
+    fullname    varchar(100) not null,
+    UNIQUE(username), UNIQUE(email)
+);
+
+ALTER TABLE users ADD COLUMN avatar_url text not null default '/media/avatars/default.jpg';
+ALTER TABLE users ADD COLUMN joined_date TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
+ALTER TABLE users ADD COLUMN is_admin boolean not null default false;
+alter table solutions add column makefile text not null default '';
+
+ALTER TABLE users ADD COLUMN verified boolean not null default false;
+
+CREATE FUNCTION update_solution() RETURNS trigger AS $update_solution$
+    BEGIN
+        UPDATE solutions SET check_result = 5 WHERE task_id = OLD.id;
+        RETURN NEW;
+    END;
+$update_solution$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER update_solution
+    After UPDATE ON tasks
+    FOR EACH ROW
+    EXECUTE FUNCTION update_solution();
+
 /*
 CREATE TABLE solutions
 (
