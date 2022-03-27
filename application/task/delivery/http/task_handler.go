@@ -56,7 +56,7 @@ func (th *TaskHandler) getTask(c echo.Context) error {
 		}
 	}
 
-	t, err := th.uc.GetTask(n, uid)
+	t, err := th.uc.GetTask(n, uid, false)
 	if err != nil {
 		return err
 	}

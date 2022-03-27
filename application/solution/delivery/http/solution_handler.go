@@ -71,7 +71,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusTeapot, err.Error())
 	}
 
-	task, err := sh.TUseCase.GetTask(iid, uid)
+	task, err := sh.TUseCase.GetTask(iid, uid, true)
 	if err != nil {
 		return err
 	}
@@ -109,11 +109,17 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	update := &models.SolutionUpdate{}
 
 	_ = json.Unmarshal(body, update)
-	err = sh.UseCase.UpdateSolution(solId, update.Code, update.Passed)
+	err = sh.UseCase.UpdateSolution(solId, *update)
 	if err != nil {
 		return err
 	}
-	log.Println(update)
+
+	if update.Code == 0 {
+		err = sh.TUseCase.MarkTaskDone(iid, uid)
+		if err != nil {
+			return err
+		}
+	}
 
 	ans := &models.ReturnId{Id: solId}
 	if _, err = easyjson.MarshalToWriter(ans, c.Response().Writer); err != nil {
@@ -136,7 +142,7 @@ func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusTeapot, err.Error())
 	}
 
-	err := sh.UseCase.UpdateSolution(uid, info.Code, info.Passed)
+	err := sh.UseCase.UpdateSolution(uid, *info)
 	if err != nil {
 		return err
 	}
@@ -178,7 +184,7 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	tsk, err := sh.TUseCase.GetTask(utid, uid)
+	tsk, err := sh.TUseCase.GetTask(utid, uid, true)
 	if err != nil {
 		return err
 	}
@@ -209,7 +215,8 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	update := &models.SolutionUpdate{}
 
 	_ = json.Unmarshal(body, update)
-	err = sh.UseCase.UpdateSolution(usolId, update.Code, update.Passed)
+	log.Println(string(body[:]))
+	err = sh.UseCase.UpdateSolution(usolId, *update)
 	if err != nil {
 		return err
 	}

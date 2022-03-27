@@ -18,7 +18,7 @@ func (suc *SolutionUseCase) GetSolution(solId uint64, taskId uint64, uid uint64)
 	if err != nil {
 		return models.SolutionFull{}, err
 	}
-	tsk, err := suc.ucTask.GetTask(taskId, uid)
+	tsk, err := suc.ucTask.GetTask(taskId, uid, true)
 	if err != nil {
 		return models.SolutionFull{}, err
 	}
@@ -40,8 +40,8 @@ func (sd *SolutionUseCase) GetSolutions(taskId uint64, uid uint64) (models.Solut
 	return slnsSQL.ConvertToJson(), nil
 }
 
-func (sd *SolutionUseCase) UpdateSolution(id uint64, code int, tests int) error {
-	return sd.repo.UpdateSolution(id, code, tests)
+func (sd *SolutionUseCase) UpdateSolution(id uint64, upd models.SolutionUpdate) error {
+	return sd.repo.UpdateSolution(id, upd)
 }
 
 func (s *SolutionUseCase) InsertSolution(taskId uint64, uid uint64, code string, makefile string, testsTotal int) (uint64, error) {

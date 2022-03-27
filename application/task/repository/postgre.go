@@ -18,6 +18,37 @@ type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
+// IsCleared implements task.Repository
+func (td *TaskDatabase) IsCleared(taskId uint64, uid uint64) (bool, error) {
+	var id []uint64
+	err := pgxscan.Select(context.Background(), td.pool, &id,
+		`SELECT uid FROM tasks_done WHERE uid = $1 and task_id = $2`,
+		uid, taskId)
+	if err != nil {
+		log.Println("task repository: IsCleared: error checking task tasks", err)
+		return false, err
+	}
+
+	if len(id) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// MarkTaskDone implements task.Repository
+func (td *TaskDatabase) MarkTaskDone(id uint64, uid uint64) error {
+	_, err := td.pool.Exec(context.Background(),
+		`INSERT INTO tasks_done (uid, task_id) VALUES ($1, $2);`, uid, id)
+
+	if err != nil {
+		log.Println("task repository: MarkTaskDone: error marking task_done:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
 // UpdateTask implements task.Repository
 func (td *TaskDatabase) UpdateTask(t *models.TaskSQL) error {
 	resp, err := td.pool.Exec(context.Background(),
@@ -59,7 +90,7 @@ func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 
 // GetTasks implements task.Repository
 func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
-	var t models.ShortTasks
+	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT id, title, description, test_amount FROM tasks WHERE 
 		is_private = false ORDER BY id DESC LIMIT $1 OFFSET $2`,
@@ -73,7 +104,7 @@ func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 }
 
 func (td *TaskDatabase) GetUserTasks(uid uint64, page int) (*models.ShortTasks, error) {
-	var t models.ShortTasks
+	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT id, title, description, test_amount FROM tasks WHERE 
 		is_private = false and creator = $1 ORDER BY id DESC LIMIT $2 OFFSET $3`,
