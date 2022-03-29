@@ -2,6 +2,7 @@ package http
 
 import (
 	"liokoredu/application/models"
+	"liokoredu/application/server/middleware"
 	"liokoredu/application/user"
 	"liokoredu/pkg/constants"
 	"liokoredu/pkg/generators"
@@ -17,14 +18,16 @@ type UserHandler struct {
 	uc user.UseCase
 }
 
-func CreateUserHandler(e *echo.Echo, uc user.UseCase) {
+func CreateUserHandler(e *echo.Echo, uc user.UseCase, a middleware.Auth) {
 	userHandler := UserHandler{
 		uc: uc,
 	}
 
 	e.POST("/api/v1/users", userHandler.createUser)
 	e.POST("/api/v1/user/auth", userHandler.login)
-	e.GET("/api/v1/user", userHandler.getUserProfile)
+	e.GET("/api/v1/user", userHandler.getUserProfile, a.GetSession)
+	e.PUT("/api/v1/user", userHandler.updateUser, a.GetSession)
+	e.PUT("/api/v1/user/password", userHandler.updatePassword, a.GetSession)
 	//e.PUT("/api/v1/user/password", userHandler.updateUserPassword)
 	e.DELETE("/api/v1/user/session", userHandler.logout)
 }
@@ -32,21 +35,7 @@ func CreateUserHandler(e *echo.Echo, uc user.UseCase) {
 func (uh *UserHandler) getUserProfile(c echo.Context) error {
 	defer c.Request().Body.Close()
 
-	cookie, err := c.Cookie(constants.SessionCookieName)
-	if err != nil && cookie != nil {
-		log.Println("user handler: getUserProfile: error getting cookie")
-		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
-	}
-
-	if cookie == nil {
-		log.Println("user handler: getUserProfile: no cookie")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
-
-	uid, err := uh.uc.CheckSession(cookie.Value)
-	if err != nil {
-		return err
-	}
+	uid := c.Get(constants.UserIdKey).(uint64)
 
 	usr, err := uh.uc.GetUserByUid(uid)
 	if err != nil {
@@ -166,6 +155,48 @@ func (uh *UserHandler) logout(c echo.Context) error {
 
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	c.SetCookie(cookie)
+
+	return nil
+}
+
+func (uh *UserHandler) updateUser(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	usr := &models.UserUpdate{}
+
+	err := easyjson.UnmarshalFromReader(c.Request().Body, usr)
+	if err != nil {
+		log.Println("user handler: updateUser: error unmarshaling data", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	uid := c.Get(constants.UserIdKey).(uint64)
+
+	err = uh.uc.UpdateUser(uid, *usr)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uh *UserHandler) updatePassword(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	data := &models.PasswordNew{}
+
+	err := easyjson.UnmarshalFromReader(c.Request().Body, data)
+	if err != nil {
+		log.Println("user handler: updatePassword: error unmarshaling data", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	uid := c.Get(constants.UserIdKey).(uint64)
+
+	err = uh.uc.UpdatePassword(uid, *data)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

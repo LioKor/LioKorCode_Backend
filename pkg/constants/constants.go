@@ -2,6 +2,7 @@ package constants
 
 const (
 	IdKey             = "id"
+	UserIdKey         = "uid"
 	CodeKey           = "code"
 	PageKey           = "page"
 	TaskId            = "taskId"

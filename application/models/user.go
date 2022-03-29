@@ -48,5 +48,27 @@ type UserAuth struct {
 	Password string `json:"password"`
 }
 
+type UserUpdate struct {
+	Email    string `json:"email"`
+	Fullname string `json:"fullname"`
+}
+
+type PasswordNew struct {
+	Old string `json:"oldPassword"`
+	New string `json:"newPassword"`
+}
+
+func (u *UserUpdate) Validate() bool {
+	if len(u.Email) == 0 || !isValidEmail(u.Email) {
+		return false
+	}
+
+	if len(u.Fullname) < 6 || len(u.Fullname) > 50 {
+		return false
+	}
+
+	return true
+}
+
 //easyjson:json
 type Users []User

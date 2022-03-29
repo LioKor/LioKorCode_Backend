@@ -15,6 +15,37 @@ type UserUseCase struct {
 	repo user.Repository
 }
 
+// UpdatePassword implements user.UseCase
+func (uuc *UserUseCase) UpdatePassword(uid uint64, data models.PasswordNew) error {
+	usr, err := uuc.GetUserByUid(uid)
+	if err != nil {
+		return err
+	}
+
+	if !generators.CheckHashedPassword(usr.Password, data.Old) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid password data provided")
+	}
+
+	return uuc.repo.UpdatePassword(uid, generators.HashPassword(data.New))
+}
+
+// UpdateUser implements user.UseCase
+func (uuc *UserUseCase) UpdateUser(uid uint64, usr models.UserUpdate) error {
+	if !usr.Validate() {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user data provided")
+	}
+	usrs, err := uuc.repo.GetUserByEmailSubmitted(usr.Email)
+	if err != nil {
+		return err
+	}
+
+	if len(*usrs) != 0 && ((*usrs)[0].Id != uid) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email has already been taken and verified")
+	}
+
+	return uuc.repo.UpdateUser(uid, usr)
+}
+
 // GetUserByUid implements user.UseCase
 func (uuc *UserUseCase) GetUserByUid(uid uint64) (*models.User, error) {
 	return uuc.repo.GetUserByUid(uid)

@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
 
+	"liokoredu/application/server/middleware"
 	slhttp "liokoredu/application/solution/delivery/http"
 	slrep "liokoredu/application/solution/repository"
 	sluc "liokoredu/application/solution/usecase"
@@ -61,7 +62,9 @@ func NewServer() *Server {
 	taskUC := tuc.NewTaskUseCase(taskRep)
 	solutionUC := sluc.NewSolutionUseCase(solutionRep, taskUC)
 
-	uhttp.CreateUserHandler(e, userUC)
+	a := middleware.NewAuth(userUC)
+
+	uhttp.CreateUserHandler(e, userUC, a)
 	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
 	thttp.CreateTaskHandler(e, taskUC, userUC)
 

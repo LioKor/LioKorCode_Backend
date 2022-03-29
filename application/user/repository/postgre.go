@@ -8,16 +8,71 @@ import (
 	"liokoredu/application/user"
 	"liokoredu/pkg/constants"
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/labstack/echo"
 )
 
 type UserDatabase struct {
 	poolRedis *redis.Pool
 	pool      *pgxpool.Pool
+}
+
+// GetUserByEmailAndUidSubmitted implements user.Repository
+func (ud *UserDatabase) GetUserByEmailSubmitted(email string) (*models.Users, error) {
+	var usrs models.Users
+	err := pgxscan.Select(context.Background(), ud.pool, &usrs,
+		`SELECT * FROM users WHERE email = $1 and verified = true`, email)
+	if err != nil {
+		log.Println("user repository: GetUserByEmailSubmitted: error getting users", err)
+		return &models.Users{}, err
+	}
+
+	if len(usrs) == 0 {
+		return &models.Users{}, nil
+	}
+
+	return &usrs, nil
+}
+
+// UpdatePassword implements user.Repository
+func (ud *UserDatabase) UpdatePassword(uid uint64, newPassword string) error {
+	resp, err := ud.pool.Exec(context.Background(),
+		`UPDATE users set password = $1 WHERE id = $2;`,
+		newPassword, uid)
+
+	if err != nil {
+		log.Println("user repository: UpdatePassword: error updating password:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	return nil
+}
+
+// UpdateUser implements user.Repository
+func (ud *UserDatabase) UpdateUser(uid uint64, usr models.UserUpdate) error {
+	resp, err := ud.pool.Exec(context.Background(),
+		`UPDATE users set email = $1, fullname = $2 WHERE id = $3;`,
+		usr.Email, usr.Fullname, uid)
+
+	if err != nil {
+		log.Println("user repository: UpdateUser: error updating user:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	return nil
 }
 
 // CheckUser implements user.Repository
