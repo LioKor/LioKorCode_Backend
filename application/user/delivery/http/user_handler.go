@@ -25,6 +25,7 @@ func CreateUserHandler(e *echo.Echo, uc user.UseCase) {
 	e.POST("/api/v1/users", userHandler.createUser)
 	e.POST("/api/v1/user/auth", userHandler.login)
 	e.GET("/api/v1/user", userHandler.getUserProfile)
+	//e.PUT("/api/v1/user/password", userHandler.updateUserPassword)
 	e.DELETE("/api/v1/user/session", userHandler.logout)
 }
 

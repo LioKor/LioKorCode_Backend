@@ -12,7 +12,7 @@ const (
 	CookieLength      = uint8(32)
 	SessionCookieName = "SID"
 	SaltLength        = 8
-	PythonAddress     = "http://10.106.0.2/check_task/long"
+	PythonAddress     = "http://10.106.0.2/check_task/multiple_files"
 	SolutionsDir      = "/store/"
 	PrivateLength     = 10
 )
