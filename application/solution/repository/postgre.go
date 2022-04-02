@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"liokoredu/application/models"
@@ -125,13 +126,15 @@ func (sd *SolutionDatabase) UpdateSolution(id uint64, upd models.SolutionUpdate)
 	return nil
 }
 
-func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code string, makefile string,
+func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code map[string]interface{},
 	testsTotal int, receivedTime time.Time) (uint64, error) {
 	var id uint64
 
 	filename := time.Now().Format("2006-01-02T15:04:05") +
 		generators.RandStringRunes(constants.PrivateLength)
-	data := []byte(code)
+
+	b, _ := json.Marshal(code)
+	data := []byte(b)
 
 	base, _ := os.Getwd()
 	file, err := os.Create(base + constants.SolutionsDir + filename)
@@ -148,9 +151,9 @@ func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code strin
 
 	err = sd.pool.QueryRow(context.Background(),
 		`INSERT INTO solutions (task_id, check_result, tests_passed, tests_total, 
-			received_date_time, source_code, uid, makefile) 
-		VALUES ($1, 1, 0, $2, $3, $4, $5, $6) RETURNING id`,
-		taskId, testsTotal, receivedTime, filename, uid, makefile).Scan(&id)
+			received_date_time, source_code, uid) 
+		VALUES ($1, 1, 0, $2, $3, $4, $5) RETURNING id`,
+		taskId, testsTotal, receivedTime, filename, uid).Scan(&id)
 	if err != nil {
 		log.Println("solution repo: InsertSolution: error inserting solution", err)
 		return 0, echo.NewHTTPError(http.StatusBadRequest, err.Error())

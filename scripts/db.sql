@@ -51,6 +51,8 @@ alter table solutions add column check_message text not null default '';
 
 ALTER TABLE users ADD COLUMN verified boolean not null default false;
 
+ALTER TABLE solutions DROP COLUMN makefile;
+
 create table tasks_done 
 (
     uid bigint references users (id) on delete cascade,

@@ -1,18 +1,18 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 )
 
 type Solution struct {
-	SourceCode string `json:"sourceCode"`
-	Makefile   string `json:"makefile"`
+	SourceCode map[string]interface{} `json:"sourceCode"`
 }
 
 type SolutionSend struct {
-	Id         uint64     `json:"id"`
-	SourceCode string     `json:"sourceCode"`
-	Tests      InputTests `json:"tests"`
+	Id         uint64                 `json:"id"`
+	SourceCode map[string]interface{} `json:"sourceCode"`
+	Tests      InputTests             `json:"tests"`
 }
 
 //easyjson:json
@@ -37,7 +37,6 @@ type SolutionSQL struct {
 	TestsPassed      int
 	TestsTotal       int
 	Uid              uint64
-	Makefile         string
 }
 
 type SolutionOne struct {
@@ -50,16 +49,15 @@ type SolutionOne struct {
 }
 
 type SolutionFull struct {
-	Id               uint64      `json:"id"`
-	SourceCode       string      `json:"sourceCode"`
-	ReceivedDateTime time.Time   `json:"receivedDatetime"`
-	CheckResult      int         `json:"checkResult"`
-	CheckMessage     string      `json:"checkError"`
-	CheckTime        float32     `json:"checkTime"`
-	Tests            TestResults `json:"tests"`
-	Makefile         string      `json:"makefile"`
-	TestsPassed      int         `json:"testsPassed"`
-	TestsTotal       int         `json:"testsTotal"`
+	Id               uint64                 `json:"id"`
+	SourceCode       map[string]interface{} `json:"sourceCode"`
+	ReceivedDateTime time.Time              `json:"receivedDatetime"`
+	CheckResult      int                    `json:"checkResult"`
+	CheckMessage     string                 `json:"checkError"`
+	CheckTime        float32                `json:"checkTime"`
+	Tests            TestResults            `json:"tests"`
+	TestsPassed      int                    `json:"testsPassed"`
+	TestsTotal       int                    `json:"testsTotal"`
 }
 
 //easyjson:json
@@ -104,10 +102,11 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 	newElem := SolutionFull{}
 	newElem.Id = slnSQL.Id
 	newElem.ReceivedDateTime = slnSQL.ReceivedDateTime
-	newElem.Makefile = slnSQL.Makefile
 	newElem.TestsPassed = slnSQL.TestsPassed
 	newElem.TestsTotal = slnSQL.TestsTotal
-	newElem.SourceCode = slnSQL.SourceCode
+	var code map[string]interface{}
+	_ = json.Unmarshal([]byte(slnSQL.SourceCode), &code)
+	newElem.SourceCode = code
 	newElem.CheckResult = slnSQL.CheckResult
 	newElem.CheckMessage = slnSQL.CheckMessage
 	newElem.CheckTime = slnSQL.CheckTime

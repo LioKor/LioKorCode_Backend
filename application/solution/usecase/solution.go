@@ -44,11 +44,11 @@ func (sd *SolutionUseCase) UpdateSolution(id uint64, upd models.SolutionUpdate) 
 	return sd.repo.UpdateSolution(id, upd)
 }
 
-func (s *SolutionUseCase) InsertSolution(taskId uint64, uid uint64, code string, makefile string, testsTotal int) (uint64, error) {
+func (s *SolutionUseCase) InsertSolution(taskId uint64, uid uint64, code map[string]interface{}, testsTotal int) (uint64, error) {
 	location, _ := time.LoadLocation("Europe/London")
 
 	received := time.Now().In(location)
-	return s.repo.InsertSolution(taskId, uid, code, makefile, testsTotal, received)
+	return s.repo.InsertSolution(taskId, uid, code, testsTotal, received)
 }
 
 func NewSolutionUseCase(s solution.Repository, t task.UseCase) solution.UseCase {

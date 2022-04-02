@@ -1325,7 +1325,27 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels14(in *jlexer.Lexer, out *S
 		case "id":
 			out.Id = uint64(in.Uint64())
 		case "sourceCode":
-			out.SourceCode = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				out.SourceCode = make(map[string]interface{})
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v19 interface{}
+					if m, ok := v19.(easyjson.Unmarshaler); ok {
+						m.UnmarshalEasyJSON(in)
+					} else if m, ok := v19.(json.Unmarshaler); ok {
+						_ = m.UnmarshalJSON(in.Raw())
+					} else {
+						v19 = in.Interface()
+					}
+					(out.SourceCode)[key] = v19
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
 		case "tests":
 			(out.Tests).UnmarshalEasyJSON(in)
 		default:
@@ -1350,7 +1370,29 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels14(out *jwriter.Writer, in 
 	{
 		const prefix string = ",\"sourceCode\":"
 		out.RawString(prefix)
-		out.String(string(in.SourceCode))
+		if in.SourceCode == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+			out.RawString(`null`)
+		} else {
+			out.RawByte('{')
+			v20First := true
+			for v20Name, v20Value := range in.SourceCode {
+				if v20First {
+					v20First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v20Name))
+				out.RawByte(':')
+				if m, ok := v20Value.(easyjson.Marshaler); ok {
+					m.MarshalEasyJSON(out)
+				} else if m, ok := v20Value.(json.Marshaler); ok {
+					out.Raw(m.MarshalJSON())
+				} else {
+					out.Raw(json.Marshal(v20Value))
+				}
+			}
+			out.RawByte('}')
+		}
 	}
 	{
 		const prefix string = ",\"tests\":"
@@ -1424,8 +1466,6 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels15(in *jlexer.Lexer, out *S
 			out.TestsTotal = int(in.Int())
 		case "Uid":
 			out.Uid = uint64(in.Uint64())
-		case "Makefile":
-			out.Makefile = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1489,11 +1529,6 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels15(out *jwriter.Writer, in 
 		const prefix string = ",\"Uid\":"
 		out.RawString(prefix)
 		out.Uint64(uint64(in.Uid))
-	}
-	{
-		const prefix string = ",\"Makefile\":"
-		out.RawString(prefix)
-		out.String(string(in.Makefile))
 	}
 	out.RawByte('}')
 }
@@ -1646,7 +1681,27 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels17(in *jlexer.Lexer, out *S
 		case "id":
 			out.Id = uint64(in.Uint64())
 		case "sourceCode":
-			out.SourceCode = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				out.SourceCode = make(map[string]interface{})
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v21 interface{}
+					if m, ok := v21.(easyjson.Unmarshaler); ok {
+						m.UnmarshalEasyJSON(in)
+					} else if m, ok := v21.(json.Unmarshaler); ok {
+						_ = m.UnmarshalJSON(in.Raw())
+					} else {
+						v21 = in.Interface()
+					}
+					(out.SourceCode)[key] = v21
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
 		case "receivedDatetime":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
@@ -1659,8 +1714,6 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels17(in *jlexer.Lexer, out *S
 			out.CheckTime = float32(in.Float32())
 		case "tests":
 			(out.Tests).UnmarshalEasyJSON(in)
-		case "makefile":
-			out.Makefile = string(in.String())
 		case "testsPassed":
 			out.TestsPassed = int(in.Int())
 		case "testsTotal":
@@ -1687,7 +1740,29 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels17(out *jwriter.Writer, in 
 	{
 		const prefix string = ",\"sourceCode\":"
 		out.RawString(prefix)
-		out.String(string(in.SourceCode))
+		if in.SourceCode == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+			out.RawString(`null`)
+		} else {
+			out.RawByte('{')
+			v22First := true
+			for v22Name, v22Value := range in.SourceCode {
+				if v22First {
+					v22First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v22Name))
+				out.RawByte(':')
+				if m, ok := v22Value.(easyjson.Marshaler); ok {
+					m.MarshalEasyJSON(out)
+				} else if m, ok := v22Value.(json.Marshaler); ok {
+					out.Raw(m.MarshalJSON())
+				} else {
+					out.Raw(json.Marshal(v22Value))
+				}
+			}
+			out.RawByte('}')
+		}
 	}
 	{
 		const prefix string = ",\"receivedDatetime\":"
@@ -1713,11 +1788,6 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels17(out *jwriter.Writer, in 
 		const prefix string = ",\"tests\":"
 		out.RawString(prefix)
 		(in.Tests).MarshalEasyJSON(out)
-	}
-	{
-		const prefix string = ",\"makefile\":"
-		out.RawString(prefix)
-		out.String(string(in.Makefile))
 	}
 	{
 		const prefix string = ",\"testsPassed\":"
@@ -1775,9 +1845,27 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels18(in *jlexer.Lexer, out *S
 		}
 		switch key {
 		case "sourceCode":
-			out.SourceCode = string(in.String())
-		case "makefile":
-			out.Makefile = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				out.SourceCode = make(map[string]interface{})
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v23 interface{}
+					if m, ok := v23.(easyjson.Unmarshaler); ok {
+						m.UnmarshalEasyJSON(in)
+					} else if m, ok := v23.(json.Unmarshaler); ok {
+						_ = m.UnmarshalJSON(in.Raw())
+					} else {
+						v23 = in.Interface()
+					}
+					(out.SourceCode)[key] = v23
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1795,12 +1883,29 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels18(out *jwriter.Writer, in 
 	{
 		const prefix string = ",\"sourceCode\":"
 		out.RawString(prefix[1:])
-		out.String(string(in.SourceCode))
-	}
-	{
-		const prefix string = ",\"makefile\":"
-		out.RawString(prefix)
-		out.String(string(in.Makefile))
+		if in.SourceCode == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+			out.RawString(`null`)
+		} else {
+			out.RawByte('{')
+			v24First := true
+			for v24Name, v24Value := range in.SourceCode {
+				if v24First {
+					v24First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v24Name))
+				out.RawByte(':')
+				if m, ok := v24Value.(easyjson.Marshaler); ok {
+					m.MarshalEasyJSON(out)
+				} else if m, ok := v24Value.(json.Marshaler); ok {
+					out.Raw(m.MarshalJSON())
+				} else {
+					out.Raw(json.Marshal(v24Value))
+				}
+			}
+			out.RawByte('}')
+		}
 	}
 	out.RawByte('}')
 }
@@ -1845,9 +1950,9 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels19(in *jlexer.Lexer, out *S
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v19 ShortTask
-			(v19).UnmarshalEasyJSON(in)
-			*out = append(*out, v19)
+			var v25 ShortTask
+			(v25).UnmarshalEasyJSON(in)
+			*out = append(*out, v25)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -1861,11 +1966,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels19(out *jwriter.Writer, in 
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v20, v21 := range in {
-			if v20 > 0 {
+		for v26, v27 := range in {
+			if v26 > 0 {
 				out.RawByte(',')
 			}
-			(v21).MarshalEasyJSON(out)
+			(v27).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -2137,30 +2242,30 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels23(in *jlexer.Lexer, out *I
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v22 []string
+			var v28 []string
 			if in.IsNull() {
 				in.Skip()
-				v22 = nil
+				v28 = nil
 			} else {
 				in.Delim('[')
-				if v22 == nil {
+				if v28 == nil {
 					if !in.IsDelim(']') {
-						v22 = make([]string, 0, 4)
+						v28 = make([]string, 0, 4)
 					} else {
-						v22 = []string{}
+						v28 = []string{}
 					}
 				} else {
-					v22 = (v22)[:0]
+					v28 = (v28)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v23 string
-					v23 = string(in.String())
-					v22 = append(v22, v23)
+					var v29 string
+					v29 = string(in.String())
+					v28 = append(v28, v29)
 					in.WantComma()
 				}
 				in.Delim(']')
 			}
-			*out = append(*out, v22)
+			*out = append(*out, v28)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -2174,19 +2279,19 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels23(out *jwriter.Writer, in 
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v24, v25 := range in {
-			if v24 > 0 {
+		for v30, v31 := range in {
+			if v30 > 0 {
 				out.RawByte(',')
 			}
-			if v25 == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			if v31 == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 				out.RawString("null")
 			} else {
 				out.RawByte('[')
-				for v26, v27 := range v25 {
-					if v26 > 0 {
+				for v32, v33 := range v31 {
+					if v32 > 0 {
 						out.RawByte(',')
 					}
-					out.String(string(v27))
+					out.String(string(v33))
 				}
 				out.RawByte(']')
 			}
