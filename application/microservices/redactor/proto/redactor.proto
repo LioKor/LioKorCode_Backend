@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "../proto";
+
+service Redactor {
+  rpc CreateConnection(IdValue) returns (CreateAnswer) {}
+  rpc Connect(IdValue) returns (ConnectAnswer) {}
+}
+
+message CreateAnswer {
+  string connectionId = 1;
+  bool flag = 2;
+  string msg = 3;
+}
+
+message ConnectAnswer {
+  bool answer = 1;
+  uint64 userId = 2;
+}
+
+message IdValue {
+  string id = 1;
+}
+
+message Message {
+  string flag = 1;
+  string msg = 2;
+}
