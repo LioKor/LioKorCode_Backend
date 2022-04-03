@@ -1,12 +1,15 @@
 package client
 
 import (
+	"context"
 	"liokoredu/application/microservices/redactor/proto"
 	"liokoredu/pkg/constants"
 	"log"
 	"net/http"
 
+	"github.com/labstack/echo"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type RedactorClient struct {
@@ -17,7 +20,7 @@ type RedactorClient struct {
 func NewRedactorClient(port string) (*RedactorClient, error) {
 	gConn, err := grpc.Dial(
 		constants.Localhost+port,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		return nil, err
@@ -26,19 +29,17 @@ func NewRedactorClient(port string) (*RedactorClient, error) {
 	return &RedactorClient{client: proto.NewRedactorClient(gConn), gConn: gConn}, nil
 }
 
-func (rc *RedactorClient) CreateConnection(login string, password string, value string) (uint64, string, error, int) {
+func (rc *RedactorClient) CreateConnection(uid uint64) (string, error, int) {
+	idValue := proto.IdValue{Id: uid}
+	answer, err := rc.client.CreateConnection(context.Background(), &idValue)
+	if err != nil {
+		return "", err, http.StatusInternalServerError
+	}
+	if answer.Flag {
+		return "", echo.NewHTTPError(http.StatusBadRequest, answer.Msg), http.StatusBadRequest
+	}
 
-	/*
-		answer, err := a.client.Login(context.Background(), usr)
-		if err != nil {
-			return 0, "", err, http.StatusInternalServerError
-		}
-		if answer.Flag {
-			return 0, "", echo.NewHTTPError(http.StatusBadRequest, answer.Msg), http.StatusBadRequest
-		}
-	*/
-
-	return 0, " ", nil, http.StatusOK
+	return answer.ConnectionId, nil, http.StatusOK
 }
 
 func (rc *RedactorClient) Connect(value string) (bool, uint64, error, int) {

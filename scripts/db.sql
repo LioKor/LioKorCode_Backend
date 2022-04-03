@@ -49,6 +49,10 @@ alter table solutions add column makefile text not null default '';
 alter table solutions add column check_time double precision not null default 0.0;
 alter table solutions add column check_message text not null default '';
 
+alter table solutions add column compile_time double precision not null default 0.0;
+
+ALTER TABLE solutions ADD COLUMN checked_date_time TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
+
 ALTER TABLE users ADD COLUMN verified boolean not null default false;
 
 ALTER TABLE solutions DROP COLUMN makefile;

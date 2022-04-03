@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
 
+	"liokoredu/application/microservices/redactor/client"
 	"liokoredu/application/server/middleware"
 	slhttp "liokoredu/application/solution/delivery/http"
 	slrep "liokoredu/application/solution/repository"
@@ -18,6 +19,8 @@ import (
 	uhttp "liokoredu/application/user/delivery/http"
 	urep "liokoredu/application/user/repository"
 	uuc "liokoredu/application/user/usecase"
+
+	rhttp "liokoredu/application/redactor/delivery/http"
 	"liokoredu/pkg/constants"
 )
 
@@ -64,9 +67,15 @@ func NewServer() *Server {
 
 	a := middleware.NewAuth(userUC)
 
+	rpcR, err := client.NewRedactorClient(constants.RedactorServicePort)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	uhttp.CreateUserHandler(e, userUC, a)
 	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
 	thttp.CreateTaskHandler(e, taskUC, userUC)
+	rhttp.CreateRedactorHandler(e, rpcR, a)
 
 	server.e = e
 	return &server

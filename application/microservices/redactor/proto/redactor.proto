@@ -19,7 +19,7 @@ message ConnectAnswer {
 }
 
 message IdValue {
-  string id = 1;
+  uint64 id = 1;
 }
 
 message Message {

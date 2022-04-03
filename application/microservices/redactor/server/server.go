@@ -15,30 +15,6 @@ type Server struct {
 }
 
 func NewServer(port string) *Server {
-	/*
-		pool, err := pgxpool.Connect(context.Background(), constants.DBConnect)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		err = pool.Ping(context.Background())
-		if err != nil {
-			logger.Fatal(err)
-		}
-
-
-		conn, err := tarantool.Connect(constants.TarantoolAddress, tarantool.Opts{
-			User: constants.TarantoolUser,
-			Pass: constants.TarantoolPassword,
-		})
-		if err != nil {
-			logger.Fatal(err)
-		}
-
-		_, err = conn.Ping()
-		if err != nil {
-			logger.Fatal(err)
-		}
-	*/
 
 	return &Server{
 		port:     port,

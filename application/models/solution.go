@@ -19,20 +19,24 @@ type SolutionSend struct {
 type InputTests [][]string
 
 type SolutionUpdate struct {
-	Code         int     `json:"checkResult"`
-	CheckMessage string  `json:"checkMessage"`
-	CheckTime    float32 `json:"checkTime"`
-	Passed       int     `json:"testsPassed"`
-	TestsTotal   int     `json:"testsTotal"`
+	Code            int       `json:"checkResult"`
+	CheckMessage    string    `json:"checkMessage"`
+	CheckedDateTime time.Time `json:"checkedDatetime"`
+	CheckTime       float32   `json:"checkTime"`
+	CompileTime     float32   `json:"buildTime"`
+	Passed          int       `json:"testsPassed"`
+	TestsTotal      int       `json:"testsTotal"`
 }
 
 type SolutionSQL struct {
 	Id               uint64
 	ReceivedDateTime time.Time
+	CheckedDateTime  time.Time
 	SourceCode       string
 	TaskId           uint64
 	CheckResult      int
 	CheckTime        float32
+	CompileTime      float32
 	CheckMessage     string
 	TestsPassed      int
 	TestsTotal       int
@@ -43,7 +47,11 @@ type SolutionOne struct {
 	Id               uint64    `json:"id"`
 	SourceCode       string    `json:"sourceCode"`
 	ReceivedDateTime time.Time `json:"receivedDatetime"`
+	CheckedDateTime  time.Time `json:"checkedDatetime"`
 	CheckResult      int       `json:"checkResult"`
+	CheckTime        float32   `json:"checkTime"`
+	CheckMessage     string    `json:"checkMessage"`
+	CompileTime      float32   `json:"compileTime"`
 	TestsPassed      int       `json:"testsPassed"`
 	TestsTotal       int       `json:"testsTotal"`
 }
@@ -52,9 +60,11 @@ type SolutionFull struct {
 	Id               uint64                 `json:"id"`
 	SourceCode       map[string]interface{} `json:"sourceCode"`
 	ReceivedDateTime time.Time              `json:"receivedDatetime"`
+	CheckedDateTime  time.Time              `json:"checkedDatetime"`
 	CheckResult      int                    `json:"checkResult"`
-	CheckMessage     string                 `json:"checkError"`
+	CheckMessage     string                 `json:"checkMessage"`
 	CheckTime        float32                `json:"checkTime"`
+	CompileTime      float32                `json:"compileTime"`
 	Tests            TestResults            `json:"tests"`
 	TestsPassed      int                    `json:"testsPassed"`
 	TestsTotal       int                    `json:"testsTotal"`
@@ -82,17 +92,25 @@ type ReturnId struct {
 func (slnsSQL SolutionsSQL) ConvertToJson() Solutions {
 	res := Solutions{}
 	for _, elem := range slnsSQL {
-		res = append(res, elem.ConvertToJson())
+		res = append(res, elem.ConvertToShort())
 	}
 	return res
 }
 
-func (slnSQL SolutionSQL) ConvertToJson() SolutionOne {
+func (slnSQL SolutionSQL) ConvertToShort() SolutionOne {
 	newElem := SolutionOne{}
+
 	newElem.Id = slnSQL.Id
+
 	newElem.ReceivedDateTime = slnSQL.ReceivedDateTime
-	newElem.SourceCode = slnSQL.SourceCode
+	newElem.CheckedDateTime = slnSQL.CheckedDateTime
+
 	newElem.CheckResult = slnSQL.CheckResult
+	newElem.CheckMessage = slnSQL.CheckMessage
+
+	newElem.CheckTime = slnSQL.CheckTime
+	newElem.CompileTime = slnSQL.CompileTime
+
 	newElem.TestsPassed = slnSQL.TestsPassed
 	newElem.TestsTotal = slnSQL.TestsTotal
 	return newElem
@@ -100,16 +118,21 @@ func (slnSQL SolutionSQL) ConvertToJson() SolutionOne {
 
 func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 	newElem := SolutionFull{}
+
 	newElem.Id = slnSQL.Id
+
 	newElem.ReceivedDateTime = slnSQL.ReceivedDateTime
-	newElem.TestsPassed = slnSQL.TestsPassed
-	newElem.TestsTotal = slnSQL.TestsTotal
-	var code map[string]interface{}
-	_ = json.Unmarshal([]byte(slnSQL.SourceCode), &code)
-	newElem.SourceCode = code
+	newElem.CheckedDateTime = slnSQL.CheckedDateTime
+
 	newElem.CheckResult = slnSQL.CheckResult
 	newElem.CheckMessage = slnSQL.CheckMessage
+
 	newElem.CheckTime = slnSQL.CheckTime
+	newElem.CompileTime = slnSQL.CompileTime
+
+	newElem.TestsPassed = slnSQL.TestsPassed
+	newElem.TestsTotal = slnSQL.TestsTotal
+
 	i := 0
 	tests := TestResults{}
 	for ; i < slnSQL.TestsPassed; i++ {
@@ -130,6 +153,10 @@ func (slnSQL SolutionSQL) ConvertToFull(tsk *Task) SolutionFull {
 	}
 
 	newElem.Tests = tests
+
+	var code map[string]interface{}
+	_ = json.Unmarshal([]byte(slnSQL.SourceCode), &code)
+	newElem.SourceCode = code
 
 	return newElem
 }

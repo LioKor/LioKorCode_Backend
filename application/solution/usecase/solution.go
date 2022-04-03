@@ -41,7 +41,11 @@ func (sd *SolutionUseCase) GetSolutions(taskId uint64, uid uint64) (models.Solut
 }
 
 func (sd *SolutionUseCase) UpdateSolution(id uint64, upd models.SolutionUpdate) error {
-	return sd.repo.UpdateSolution(id, upd)
+	location, _ := time.LoadLocation("Europe/London")
+
+	checked := time.Now().In(location)
+	upd.CheckedDateTime = checked
+	return sd.repo.UpdateSolution(id, &upd)
 }
 
 func (s *SolutionUseCase) InsertSolution(taskId uint64, uid uint64, code map[string]interface{}, testsTotal int) (uint64, error) {

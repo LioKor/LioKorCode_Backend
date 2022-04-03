@@ -111,12 +111,11 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 	return sln, nil
 }
 
-// UpdateSolution implements solution.Repository
-func (sd *SolutionDatabase) UpdateSolution(id uint64, upd models.SolutionUpdate) error {
+func (sd *SolutionDatabase) UpdateSolution(id uint64, upd *models.SolutionUpdate) error {
 	_, err := sd.pool.Exec(context.Background(),
 		`UPDATE solutions SET check_result = $1, tests_passed = $2, check_message = $3,
-		check_time = $4 WHERE id = $5`,
-		upd.Code, upd.Passed, upd.CheckMessage, upd.CheckTime, id)
+		check_time = $4, compile_time = $5, checked_date_time = $6 WHERE id = $7`,
+		upd.Code, upd.Passed, upd.CheckMessage, upd.CheckTime, upd.CompileTime, upd.CheckedDateTime, id)
 
 	if err != nil {
 		log.Println(err)

@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/georgysavva/scany v0.3.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
@@ -12,7 +13,8 @@ require (
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/mailru/easyjson v0.7.7
 	github.com/microcosm-cc/bluemonday v1.0.18
-	github.com/nitrous-io/ot.go v0.0.0-20150414211016-2da61115adf7 // indirect
+	github.com/nitrous-io/ot.go v0.0.0-20150414211016-2da61115adf7
+	github.com/petejkim/ot.go v0.0.0-20150414211016-2da61115adf7
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.28.0

@@ -1232,8 +1232,14 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels13(in *jlexer.Lexer, out *S
 			out.Code = int(in.Int())
 		case "checkMessage":
 			out.CheckMessage = string(in.String())
+		case "checkedDatetime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CheckedDateTime).UnmarshalJSON(data))
+			}
 		case "checkTime":
 			out.CheckTime = float32(in.Float32())
+		case "buildTime":
+			out.CompileTime = float32(in.Float32())
 		case "testsPassed":
 			out.Passed = int(in.Int())
 		case "testsTotal":
@@ -1263,9 +1269,19 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels13(out *jwriter.Writer, in 
 		out.String(string(in.CheckMessage))
 	}
 	{
+		const prefix string = ",\"checkedDatetime\":"
+		out.RawString(prefix)
+		out.Raw((in.CheckedDateTime).MarshalJSON())
+	}
+	{
 		const prefix string = ",\"checkTime\":"
 		out.RawString(prefix)
 		out.Float32(float32(in.CheckTime))
+	}
+	{
+		const prefix string = ",\"buildTime\":"
+		out.RawString(prefix)
+		out.Float32(float32(in.CompileTime))
 	}
 	{
 		const prefix string = ",\"testsPassed\":"
@@ -1450,6 +1466,10 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels15(in *jlexer.Lexer, out *S
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
 			}
+		case "CheckedDateTime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CheckedDateTime).UnmarshalJSON(data))
+			}
 		case "SourceCode":
 			out.SourceCode = string(in.String())
 		case "TaskId":
@@ -1458,6 +1478,8 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels15(in *jlexer.Lexer, out *S
 			out.CheckResult = int(in.Int())
 		case "CheckTime":
 			out.CheckTime = float32(in.Float32())
+		case "CompileTime":
+			out.CompileTime = float32(in.Float32())
 		case "CheckMessage":
 			out.CheckMessage = string(in.String())
 		case "TestsPassed":
@@ -1491,6 +1513,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels15(out *jwriter.Writer, in 
 		out.Raw((in.ReceivedDateTime).MarshalJSON())
 	}
 	{
+		const prefix string = ",\"CheckedDateTime\":"
+		out.RawString(prefix)
+		out.Raw((in.CheckedDateTime).MarshalJSON())
+	}
+	{
 		const prefix string = ",\"SourceCode\":"
 		out.RawString(prefix)
 		out.String(string(in.SourceCode))
@@ -1509,6 +1536,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels15(out *jwriter.Writer, in 
 		const prefix string = ",\"CheckTime\":"
 		out.RawString(prefix)
 		out.Float32(float32(in.CheckTime))
+	}
+	{
+		const prefix string = ",\"CompileTime\":"
+		out.RawString(prefix)
+		out.Float32(float32(in.CompileTime))
 	}
 	{
 		const prefix string = ",\"CheckMessage\":"
@@ -1583,8 +1615,18 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels16(in *jlexer.Lexer, out *S
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
 			}
+		case "checkedDatetime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CheckedDateTime).UnmarshalJSON(data))
+			}
 		case "checkResult":
 			out.CheckResult = int(in.Int())
+		case "checkTime":
+			out.CheckTime = float32(in.Float32())
+		case "checkMessage":
+			out.CheckMessage = string(in.String())
+		case "compileTime":
+			out.CompileTime = float32(in.Float32())
 		case "testsPassed":
 			out.TestsPassed = int(in.Int())
 		case "testsTotal":
@@ -1619,9 +1661,29 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels16(out *jwriter.Writer, in 
 		out.Raw((in.ReceivedDateTime).MarshalJSON())
 	}
 	{
+		const prefix string = ",\"checkedDatetime\":"
+		out.RawString(prefix)
+		out.Raw((in.CheckedDateTime).MarshalJSON())
+	}
+	{
 		const prefix string = ",\"checkResult\":"
 		out.RawString(prefix)
 		out.Int(int(in.CheckResult))
+	}
+	{
+		const prefix string = ",\"checkTime\":"
+		out.RawString(prefix)
+		out.Float32(float32(in.CheckTime))
+	}
+	{
+		const prefix string = ",\"checkMessage\":"
+		out.RawString(prefix)
+		out.String(string(in.CheckMessage))
+	}
+	{
+		const prefix string = ",\"compileTime\":"
+		out.RawString(prefix)
+		out.Float32(float32(in.CompileTime))
 	}
 	{
 		const prefix string = ",\"testsPassed\":"
@@ -1706,12 +1768,18 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels17(in *jlexer.Lexer, out *S
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ReceivedDateTime).UnmarshalJSON(data))
 			}
+		case "checkedDatetime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CheckedDateTime).UnmarshalJSON(data))
+			}
 		case "checkResult":
 			out.CheckResult = int(in.Int())
-		case "checkError":
+		case "checkMessage":
 			out.CheckMessage = string(in.String())
 		case "checkTime":
 			out.CheckTime = float32(in.Float32())
+		case "compileTime":
+			out.CompileTime = float32(in.Float32())
 		case "tests":
 			(out.Tests).UnmarshalEasyJSON(in)
 		case "testsPassed":
@@ -1770,12 +1838,17 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels17(out *jwriter.Writer, in 
 		out.Raw((in.ReceivedDateTime).MarshalJSON())
 	}
 	{
+		const prefix string = ",\"checkedDatetime\":"
+		out.RawString(prefix)
+		out.Raw((in.CheckedDateTime).MarshalJSON())
+	}
+	{
 		const prefix string = ",\"checkResult\":"
 		out.RawString(prefix)
 		out.Int(int(in.CheckResult))
 	}
 	{
-		const prefix string = ",\"checkError\":"
+		const prefix string = ",\"checkMessage\":"
 		out.RawString(prefix)
 		out.String(string(in.CheckMessage))
 	}
@@ -1783,6 +1856,11 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels17(out *jwriter.Writer, in 
 		const prefix string = ",\"checkTime\":"
 		out.RawString(prefix)
 		out.Float32(float32(in.CheckTime))
+	}
+	{
+		const prefix string = ",\"compileTime\":"
+		out.RawString(prefix)
+		out.Float32(float32(in.CompileTime))
 	}
 	{
 		const prefix string = ",\"tests\":"
@@ -2322,4 +2400,70 @@ func (v *InputTests) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InputTests) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeLiokoreduApplicationModels23(l, v)
+}
+func easyjsonD2b7633eDecodeLiokoreduApplicationModels24(in *jlexer.Lexer, out *IdValue) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.Id = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeLiokoreduApplicationModels24(out *jwriter.Writer, in IdValue) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Id))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v IdValue) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeLiokoreduApplicationModels24(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v IdValue) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeLiokoreduApplicationModels24(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *IdValue) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeLiokoreduApplicationModels24(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *IdValue) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeLiokoreduApplicationModels24(l, v)
 }
