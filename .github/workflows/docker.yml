@@ -62,15 +62,15 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
               sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/main
-      - name: remove docker containers
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            sudo docker stop $(docker ps |grep ${{ secrets.DOCKERHUB_USERNAME }} | awk '{print $1}')
-            sudo docker rm $(docker ps -a |grep ${{ secrets.DOCKERHUB_USERNAME }} | awk '{print $1}')
+      #- name: remove docker containers
+      #  uses: appleboy/ssh-action@master
+      #  with:
+      #    host: ${{ secrets.HOST }}
+      #    username: ${{ secrets.USERNAME }}
+      #    key: ${{ secrets.PRIVATE_KEY }}
+      #    script: |
+      #      sudo docker stop $(docker ps |grep ${{ secrets.DOCKERHUB_USERNAME }} | awk '{print $1}')
+       #     sudo docker rm $(docker ps -a |grep ${{ secrets.DOCKERHUB_USERNAME }} | awk '{print $1}')
       - name: deploy docker image
         uses: appleboy/ssh-action@master
         with:
