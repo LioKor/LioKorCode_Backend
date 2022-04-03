@@ -1,0 +1,102 @@
+name: Docker Build Services
+
+on:
+  push:
+    branches:
+      #- master
+      - deploy
+  #pull_request:
+   # branches:
+      #- master
+
+jobs:
+  golangci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        with:
+          version: v1.40
+
+  test:
+    runs-on: ubuntu-latest
+    needs: golangci
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.13.x'
+      #- name: Checkout code
+      #  uses: actions/checkout@v2
+     # - name: Test
+     #   run: go test --cover ./...
+
+  build:
+    runs-on: ubuntu-latest
+    # needs: test
+    steps:
+      - uses: actions/checkout@v1
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Build Docker image for main server
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/main:${GITHUB_SHA::8} -f Dockerfile .
+      #- name: Build Docker image for auth service
+      #  run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/auth:${GITHUB_SHA::8} -f Dockerfile_auth .
+      #- name: Build Docker image for subscription service
+      #  run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/sub:${GITHUB_SHA::8} -f Dockerfile_sub .
+      #- name: Build Docker image for chat service
+      #  run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chat:${GITHUB_SHA::8} -f Dockerfile_chat .
+      #- name: Build Docker image for kudago service
+      #  run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/kudago:${GITHUB_SHA::8} -f Dockerfile_kudago .
+
+      - name: Push the image for main
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/main:${GITHUB_SHA::8}
+      #- name: Push the image for auth service
+      #  run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/auth:${GITHUB_SHA::8}
+      #- name: Push the image for subscription service
+      #  run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/sub:${GITHUB_SHA::8}
+      #- name: Push the image for chat service
+      #  run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/chat:${GITHUB_SHA::8}
+      #- name: Push the image for kudago service
+      #  run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/kudago:${GITHUB_SHA::8}
+
+  deploy:
+
+    if: contains(github.ref, 'deploy')
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: pull docker image
+        uses: appleboy/ssh-action@master
+        with:
+          envs: GITHUB_SHA
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+              sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/main:${GITHUB_SHA::8}
+      - name: remove docker containers
+        uses: appleboy/ssh-action@master
+        with:
+          envs: GITHUB_SHA
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            sudo docker stop $(docker ps |grep ${{ secrets.DOCKERHUB_USERNAME }} | awk '{print $1}')
+            sudo docker rm $(docker ps -a |grep ${{ secrets.DOCKERHUB_USERNAME }} | awk '{print $1}')
+      - name: deploy docker image
+        uses: appleboy/ssh-action@master
+        with:
+          envs: GITHUB_SHA
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          environment:
+          script: |
+            sudo docker run -d \
+            --network="host" -v ~/backend/LioKorEdu_Backend/store:/./project/store -p 1323:1323 --name backend_main ${{ secrets.DOCKERHUB_USERNAME }}/main:${GITHUB_SHA::8}
