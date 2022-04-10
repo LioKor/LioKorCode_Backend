@@ -7,8 +7,8 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
+	"github.com/petejkim/ot.go/ot"
 
-	"liokoredu/application/microservices/redactor/client"
 	"liokoredu/application/server/middleware"
 	slhttp "liokoredu/application/solution/delivery/http"
 	slrep "liokoredu/application/solution/repository"
@@ -32,6 +32,7 @@ func NewServer() *Server {
 	var server Server
 
 	e := echo.New()
+	ot.TextEncoding = ot.TextEncodingTypeUTF16
 
 	pool, err := pgxpool.Connect(context.Background(),
 		"user=lk"+
@@ -67,15 +68,15 @@ func NewServer() *Server {
 
 	a := middleware.NewAuth(userUC)
 
-	rpcR, err := client.NewRedactorClient(constants.RedactorServicePort)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//rpcR, err := client.NewRedactorClient(constants.RedactorServicePort)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	uhttp.CreateUserHandler(e, userUC, a)
 	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
 	thttp.CreateTaskHandler(e, taskUC, userUC)
-	rhttp.CreateRedactorHandler(e, rpcR, a)
+	rhttp.CreateRedactorHandler(e, a)
 
 	server.e = e
 	return &server

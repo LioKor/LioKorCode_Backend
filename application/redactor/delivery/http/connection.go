@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"encoding/json"
@@ -55,8 +55,10 @@ func (c *Connection) Handle() error {
 	}
 
 	s.UnregisterConnection(c)
-	c.Broadcast(&Event{"quit", c.ID})
-
+	c.Broadcast(&Event{"quit", map[string]interface{}{
+		"client_id": c.ID,
+		"username":  s.Clients[c.ID].Name,
+	}})
 	return nil
 }
 

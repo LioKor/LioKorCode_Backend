@@ -18,6 +18,7 @@ const (
 	PrivateLength       = 10
 	Localhost           = "127.0.0.1"
 	RedactorServicePort = ":3001"
+	WSLength            = 16
 )
 
 var LetterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")

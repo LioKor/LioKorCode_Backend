@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"log"
@@ -55,17 +55,21 @@ func (s *Session) HandleEvents() {
 		if !ok {
 			return
 		}
+		log.Println("aaa")
 
 		c := e.Conn
 		log.Println(e.Name)
 		switch e.Name {
 		case "join":
 			data, ok := e.Data.(map[string]interface{})
+			log.Println(data, ok)
 			if !ok {
 				break
 			}
 			username, ok := data["username"].(string)
+			log.Println(username, ok)
 			if !ok || username == "" {
+				log.Println(username)
 				break
 			}
 
@@ -74,6 +78,7 @@ func (s *Session) HandleEvents() {
 
 			err := c.Send(&Event{"registered", c.ID})
 			if err != nil {
+				log.Println(username)
 				break
 			}
 			c.Broadcast(&Event{"join", map[string]interface{}{

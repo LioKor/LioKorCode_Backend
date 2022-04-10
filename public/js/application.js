@@ -1,3 +1,15 @@
+function makeid(length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * 
+charactersLength));
+ }
+ return result;
+}
+
+
 (function () {
   'use strict';
 
@@ -20,7 +32,8 @@
     App.conn.send('join', { username: $username.val() });
   });
 
-  var url = [location.protocol.replace('http', 'ws'), '//', location.host, '/ws'].join('');
+  var url = [location.protocol.replace('http', 'ws'), '//', location.host, '/ws'].join('')+"/"+makeid(5);
+  console.log(url)
   var conn = App.conn = new SocketConnection(url);
 
   conn.on('open', function () {
