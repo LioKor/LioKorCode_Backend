@@ -7,6 +7,7 @@ import (
 	"liokoredu/application/models"
 	"liokoredu/application/user"
 	"liokoredu/pkg/constants"
+	"liokoredu/pkg/generators"
 	"log"
 	"net/http"
 	"strconv"
@@ -20,6 +21,30 @@ import (
 type UserDatabase struct {
 	poolRedis *redis.Pool
 	pool      *pgxpool.Pool
+}
+
+func (ud *UserDatabase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
+	p := constants.AvatartDir + strconv.FormatUint(uid, 10) + generators.RandStringRunes(constants.AvatartSalt)
+	path, err := generators.DataURLToFile(p, avt.AvatarUrl, constants.MaxSizeKB)
+	if err != nil {
+		log.Println("user repo: UpdateUserAvatar: error creating file:", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	resp, err := ud.pool.Exec(context.Background(),
+		`UPDATE users set avatar_url = $1 WHERE id = $2;`,
+		path, uid)
+
+	if err != nil {
+		log.Println("user repository: UpdateUserAvatar: error updating avatar:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	return nil
 }
 
 // GetUserByEmailAndUidSubmitted implements user.Repository

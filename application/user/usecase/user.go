@@ -15,6 +15,11 @@ type UserUseCase struct {
 	repo user.Repository
 }
 
+// UpdateUserAvatar implements user.UseCase
+func (uuc *UserUseCase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
+	return uuc.repo.UpdateUserAvatar(uid, avt)
+}
+
 // UpdatePassword implements user.UseCase
 func (uuc *UserUseCase) UpdatePassword(uid uint64, data models.PasswordNew) error {
 	usr, err := uuc.GetUserByUid(uid)

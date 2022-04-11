@@ -28,7 +28,7 @@ func CreateUserHandler(e *echo.Echo, uc user.UseCase, a middleware.Auth) {
 	e.GET("/api/v1/user", userHandler.getUserProfile, a.GetSession)
 	e.PUT("/api/v1/user", userHandler.updateUser, a.GetSession)
 	e.PUT("/api/v1/user/password", userHandler.updatePassword, a.GetSession)
-	//e.PUT("/api/v1/user/password", userHandler.updateUserPassword)
+	e.PUT("/api/v1/user/avatar", userHandler.updateUserAvatar, a.GetSession)
 	e.DELETE("/api/v1/user/session", userHandler.logout)
 }
 
@@ -48,6 +48,28 @@ func (uh *UserHandler) getUserProfile(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func (uh *UserHandler) updateUserAvatar(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	uid := c.Get(constants.UserIdKey).(uint64)
+
+	avt := &models.Avatar{}
+
+	err := easyjson.UnmarshalFromReader(c.Request().Body, avt)
+	if err != nil {
+		log.Println("user handler: updateUserAvatar: error unmarshaling data", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = uh.uc.UpdateUserAvatar(uid, avt)
+
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, "Avatar changed successfully")
 }
 
 func (uh *UserHandler) createUser(c echo.Context) error {

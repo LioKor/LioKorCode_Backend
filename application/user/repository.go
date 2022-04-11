@@ -13,5 +13,6 @@ type Repository interface {
 	CheckUser(usr models.UserAuth) (*models.User, error)
 	InsertUser(usr models.User) (uint64, error)
 	UpdateUser(uid uint64, usr models.UserUpdate) error
+	UpdateUserAvatar(uid uint64, usr *models.Avatar) error
 	UpdatePassword(uid uint64, newPassword string) error
 }

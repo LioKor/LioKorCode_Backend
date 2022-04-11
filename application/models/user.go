@@ -17,6 +17,10 @@ type User struct {
 	IsAdmin    bool      `json:"isAdmin"`
 }
 
+type Avatar struct {
+	AvatarUrl string `json:"avatarUrl"`
+}
+
 func (u *User) Validate() bool {
 	if len(u.Username) < 6 || len(u.Username) > 30 {
 		return false
