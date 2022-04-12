@@ -9,6 +9,10 @@ type Solution struct {
 	SourceCode map[string]interface{} `json:"sourceCode"`
 }
 
+type SolutionFile struct {
+	SourceCode string `json:"sourceCode"`
+}
+
 type SolutionSend struct {
 	Id         uint64                 `json:"id"`
 	SourceCode map[string]interface{} `json:"sourceCode"`

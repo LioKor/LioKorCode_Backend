@@ -15,7 +15,7 @@ const (
 	SaltLength          = 8
 	PythonAddress       = "http://10.106.0.2/check_task/multiple_files"
 	SolutionsDir        = "/store/"
-	AvatartDir          = "/public/"
+	AvatartDir          = "/media/avatars/"
 	AvatartSalt         = 8
 	PrivateLength       = 10
 	Localhost           = "127.0.0.1"

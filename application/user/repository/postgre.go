@@ -10,7 +10,9 @@ import (
 	"liokoredu/pkg/generators"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/gomodule/redigo/redis"
@@ -24,13 +26,15 @@ type UserDatabase struct {
 }
 
 func (ud *UserDatabase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
+	base, _ := os.Getwd()
 	p := constants.AvatartDir + strconv.FormatUint(uid, 10) + generators.RandStringRunes(constants.AvatartSalt)
-	path, err := generators.DataURLToFile(p, avt.AvatarUrl, constants.MaxSizeKB)
+	path, err := generators.DataURLToFile(base+p, avt.AvatarUrl, constants.MaxSizeKB)
 	if err != nil {
 		log.Println("user repo: UpdateUserAvatar: error creating file:", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	path = p + "." + strings.Split(path, ".")[1]
 	resp, err := ud.pool.Exec(context.Background(),
 		`UPDATE users set avatar_url = $1 WHERE id = $2;`,
 		path, uid)

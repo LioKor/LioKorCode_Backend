@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
+	"github.com/mailru/easyjson"
 )
 
 type RedactorHandler struct {
@@ -39,8 +40,15 @@ func CreateRedactorHandler(e *echo.Echo, a middleware.Auth) {
 func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	defer c.Request().Body.Close()
 
-	//uid := c.Get(constants.UserIdKey).(uint64)
-	roomId, _ := createRoom("")
+	sln := &models.SolutionFile{}
+
+	if err := easyjson.UnmarshalFromReader(c.Request().Body, sln); err != nil {
+		log.Println(err)
+		return echo.NewHTTPError(http.StatusTeapot, err.Error())
+	}
+	log.Println(sln)
+
+	roomId, _ := createRoom(sln.SourceCode)
 	//serveWs(c, session)
 
 	/*
