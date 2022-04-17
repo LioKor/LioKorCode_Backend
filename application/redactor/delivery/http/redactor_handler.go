@@ -40,7 +40,7 @@ func CreateRedactorHandler(e *echo.Echo, a middleware.Auth) {
 func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	defer c.Request().Body.Close()
 
-	sln := &models.SolutionFile{}
+	sln := &models.Solution{}
 
 	if err := easyjson.UnmarshalFromReader(c.Request().Body, sln); err != nil {
 		log.Println(err)
@@ -96,7 +96,7 @@ func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-func createRoom(code string) (string, *Session) {
+func createRoom(code map[string]interface{}) (string, *Session) {
 	roomId := generators.RandStringRunes(constants.WSLength)
 	log.Println("created room:", roomId)
 	session := NewSession(code)

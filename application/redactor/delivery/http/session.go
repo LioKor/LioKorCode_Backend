@@ -18,14 +18,18 @@ type Session struct {
 
 	lock sync.Mutex
 
-	*session.Session
+	FileSessions map[string]*session.Session
 }
 
-func NewSession(document string) *Session {
+func NewSession(document map[string]interface{}) *Session {
+	s := map[string]*session.Session{}
+	for filename, text := range document {
+		s[filename] = session.New(text.(string))
+	}
 	return &Session{
-		Connections: map[*Connection]struct{}{},
-		EventChan:   make(chan ConnEvent),
-		Session:     session.New(document),
+		Connections:  map[*Connection]struct{}{},
+		EventChan:    make(chan ConnEvent),
+		FileSessions: s,
 	}
 }
 
@@ -35,17 +39,22 @@ func (s *Session) RegisterConnection(c *Connection) {
 	c.ID = id
 	s.nextConnID++
 	s.Connections[c] = struct{}{}
-	s.AddClient(c.ID)
+	for filename := range s.FileSessions {
+		s.FileSessions[filename].AddClient(c.ID)
+	}
 	s.lock.Unlock()
 }
 
-func (s *Session) UnregisterConnection(c *Connection) {
+func (s *Session) UnregisterConnection(c *Connection) string {
 	s.lock.Lock()
 	delete(s.Connections, c)
-	if c.ID != "" {
-		s.RemoveClient(c.ID)
+	var filename string
+	for filename = range s.FileSessions {
+		s.FileSessions[filename].RemoveClient(c.ID)
 	}
+
 	s.lock.Unlock()
+	return filename
 }
 
 func (s *Session) HandleEvents() {
@@ -73,35 +82,43 @@ func (s *Session) HandleEvents() {
 				break
 			}
 
-			s.SetName(c.ID, username)
+			for filename := range s.FileSessions {
+				s.FileSessions[filename].SetName(c.ID, username)
+			}
+
 			log.Println(c.ID)
 
-			err := c.Send(&Event{"registered", c.ID})
+			err := c.Send(&Event{"all", "registered", c.ID})
 			if err != nil {
 				log.Println(username)
 				break
 			}
-			c.Broadcast(&Event{"join", map[string]interface{}{
+			c.Broadcast(&Event{"all", "join", map[string]interface{}{
 				"client_id": c.ID,
 				"username":  username,
 			}})
 		case "op":
-			// data: [revision, ops, selection?]
+			// data: [filename revision, ops, selection? ]
 			data, ok := e.Data.([]interface{})
 			if !ok {
 				break
 			}
-			if len(data) < 2 {
+			if len(data) < 3 {
+				break
+			}
+			// filename
+			filename, ok := data[0].(string)
+			if !ok {
 				break
 			}
 			// revision
-			revf, ok := data[0].(float64)
+			revf, ok := data[1].(float64)
 			rev := int(revf)
 			if !ok {
 				break
 			}
 			// ops
-			ops, ok := data[1].([]interface{})
+			ops, ok := data[2].([]interface{})
 			if !ok {
 				break
 			}
@@ -110,8 +127,8 @@ func (s *Session) HandleEvents() {
 				break
 			}
 			// selection (optional)
-			if len(data) >= 3 {
-				selm, ok := data[2].(map[string]interface{})
+			if len(data) >= 4 {
+				selm, ok := data[3].(map[string]interface{})
 				if !ok {
 					break
 				}
@@ -122,33 +139,42 @@ func (s *Session) HandleEvents() {
 				top.Meta = sel
 			}
 
-			top2, err := s.AddOperation(rev, top)
+			top2, err := s.FileSessions[filename].AddOperation(rev, top)
 			if err != nil {
 				break
 			}
 
-			err = c.Send(&Event{"ok", nil})
+			err = c.Send(&Event{filename, "ok", nil})
 			if err != nil {
 				break
 			}
 
 			if sel, ok := top2.Meta.(*selection.Selection); ok {
-				s.SetSelection(c.ID, sel)
-				c.Broadcast(&Event{"op", []interface{}{c.ID, top2.Marshal(), sel.Marshal()}})
+				s.FileSessions[filename].SetSelection(c.ID, sel)
+				c.Broadcast(&Event{filename, "op", []interface{}{c.ID, top2.Marshal(), sel.Marshal()}})
 			} else {
-				c.Broadcast(&Event{"op", []interface{}{c.ID, top2.Marshal()}})
+				c.Broadcast(&Event{filename, "op", []interface{}{c.ID, top2.Marshal()}})
 			}
 		case "sel":
-			data, ok := e.Data.(map[string]interface{})
+			data, ok := e.Data.([]interface{})
+			//data, ok := e.Data.(map[string]interface{})
 			if !ok {
 				break
 			}
-			sel, err := selection.Unmarshal(data)
+			filename, ok := data[0].(string)
+			if !ok {
+				break
+			}
+			selm, ok := data[1].(map[string]interface{})
+			if !ok {
+				break
+			}
+			sel, err := selection.Unmarshal(selm)
 			if err != nil {
 				break
 			}
-			s.SetSelection(c.ID, sel)
-			c.Broadcast(&Event{"sel", []interface{}{c.ID, sel.Marshal()}})
+			s.FileSessions[filename].SetSelection(c.ID, sel)
+			c.Broadcast(&Event{filename, "sel", []interface{}{c.ID, sel.Marshal()}})
 		}
 	}
 }

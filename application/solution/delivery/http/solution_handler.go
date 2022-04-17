@@ -40,6 +40,7 @@ func CreateSolutionHandler(e *echo.Echo,
 
 func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	//c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
