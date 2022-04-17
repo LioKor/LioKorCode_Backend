@@ -35,6 +35,7 @@ func CreateTaskHandler(e *echo.Echo,
 
 func (th *TaskHandler) getTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	id := c.Param(constants.IdKey)
 	n, _ := strconv.ParseUint(string(id), 10, 64)
@@ -71,6 +72,7 @@ func (th *TaskHandler) getTask(c echo.Context) error {
 
 func (th *TaskHandler) getTasks(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	page := c.QueryParams().Get(constants.PageKey)
 	p, _ := strconv.Atoi(string(page))
@@ -93,6 +95,7 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 
 func (th *TaskHandler) getUserTasks(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -136,6 +139,7 @@ func (th *TaskHandler) getUserTasks(c echo.Context) error {
 
 func (th *TaskHandler) createTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -182,6 +186,7 @@ func (th *TaskHandler) createTask(c echo.Context) error {
 
 func (th *TaskHandler) deleteTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -217,6 +222,7 @@ func (th *TaskHandler) deleteTask(c echo.Context) error {
 
 func (th *TaskHandler) updateTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {

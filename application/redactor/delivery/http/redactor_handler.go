@@ -39,6 +39,7 @@ func CreateRedactorHandler(e *echo.Echo, a middleware.Auth) {
 
 func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	sln := &models.Solution{}
 
@@ -69,6 +70,7 @@ func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 
 func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	id := c.Param(constants.IdKey)
 	log.Println(id)

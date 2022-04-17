@@ -34,6 +34,7 @@ func CreateUserHandler(e *echo.Echo, uc user.UseCase, a middleware.Auth) {
 
 func (uh *UserHandler) getUserProfile(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	uid := c.Get(constants.UserIdKey).(uint64)
 
@@ -52,6 +53,7 @@ func (uh *UserHandler) getUserProfile(c echo.Context) error {
 
 func (uh *UserHandler) updateUserAvatar(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	uid := c.Get(constants.UserIdKey).(uint64)
 
@@ -74,6 +76,7 @@ func (uh *UserHandler) updateUserAvatar(c echo.Context) error {
 
 func (uh *UserHandler) createUser(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -116,6 +119,7 @@ func (uh *UserHandler) createUser(c echo.Context) error {
 
 func (uh *UserHandler) login(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -158,6 +162,7 @@ func (uh *UserHandler) login(c echo.Context) error {
 
 func (uh *UserHandler) logout(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -183,6 +188,7 @@ func (uh *UserHandler) logout(c echo.Context) error {
 
 func (uh *UserHandler) updateUser(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	usr := &models.UserUpdate{}
 
@@ -204,6 +210,7 @@ func (uh *UserHandler) updateUser(c echo.Context) error {
 
 func (uh *UserHandler) updatePassword(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	data := &models.PasswordNew{}
 

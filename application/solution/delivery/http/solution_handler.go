@@ -40,7 +40,7 @@ func CreateSolutionHandler(e *echo.Echo,
 
 func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
-	//c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -133,6 +133,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 
 func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	id := c.Param(constants.IdKey)
 	uid, _ := strconv.ParseUint(string(id), 10, 64)
@@ -153,6 +154,7 @@ func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 
 func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -227,6 +229,7 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 
 func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -267,6 +270,7 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 
 func (sh SolutionHandler) getSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -307,6 +311,7 @@ func (sh SolutionHandler) getSolution(c echo.Context) error {
 
 func (sh SolutionHandler) deleteSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
