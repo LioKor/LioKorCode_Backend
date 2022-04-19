@@ -51,7 +51,6 @@ func (ud *UserDatabase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
 	return nil
 }
 
-// GetUserByEmailAndUidSubmitted implements user.Repository
 func (ud *UserDatabase) GetUserByEmailSubmitted(email string) (*models.Users, error) {
 	var usrs models.Users
 	err := pgxscan.Select(context.Background(), ud.pool, &usrs,

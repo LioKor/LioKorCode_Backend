@@ -46,15 +46,17 @@ func (tuc *TaskUseCase) GetTasks(uid uint64, page int) (models.ShortTasks, error
 	if uid == 0 {
 		return *tsks, nil
 	}
+	tsksArr := models.ShortTasks{}
 	for _, tsk := range *tsks {
 		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
 		if err != nil {
 			return models.ShortTasks{}, err
 		}
-		(&tsk).IsCleared = isDone
+		tsk.IsCleared = isDone
+		tsksArr = append(tsksArr, tsk)
 	}
 
-	return *tsks, nil
+	return tsksArr, nil
 }
 
 func (uc *TaskUseCase) GetUserTasks(uid uint64, page int) (models.ShortTasks, error) {
