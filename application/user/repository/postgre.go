@@ -55,7 +55,7 @@ func (ud *UserDatabase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
 func (ud *UserDatabase) GetUserByEmailSubmitted(email string) (*models.Users, error) {
 	var usrs models.Users
 	err := pgxscan.Select(context.Background(), ud.pool, &usrs,
-		`SELECT * FROM users WHERE email = $1 and verified = true`, email)
+		`SELECT * FROM users WHERE lower(email) = $1 and verified = true`, strings.ToLower(email))
 	if err != nil {
 		log.Println("user repository: GetUserByEmailSubmitted: error getting users", err)
 		return &models.Users{}, err
@@ -108,7 +108,7 @@ func (ud *UserDatabase) UpdateUser(uid uint64, usr models.UserUpdate) error {
 func (ud *UserDatabase) CheckUser(usr models.UserAuth) (*models.User, error) {
 	var gotUser models.User
 	err := ud.pool.QueryRow(context.Background(), `SELECT id, username, fullname, password, email
-	 FROM users WHERE username = $1`, usr.Username).Scan(&gotUser.Id, &gotUser.Username, &gotUser.Fullname, &gotUser.Password,
+	 FROM users WHERE lower(username) = $1`, strings.ToLower(usr.Username)).Scan(&gotUser.Id, &gotUser.Username, &gotUser.Fullname, &gotUser.Password,
 		&gotUser.Email)
 
 	if errors.As(err, &sql.ErrNoRows) {
@@ -144,8 +144,8 @@ func (ud *UserDatabase) InsertUser(usr models.User) (uint64, error) {
 func (ud *UserDatabase) GetUserByUsernameOrEmail(username string, email string) (*models.User, error) {
 	var usrs models.Users
 	err := pgxscan.Select(context.Background(), ud.pool, &usrs,
-		`SELECT * FROM users WHERE username = $1 or email = $2`,
-		username, email)
+		`SELECT * FROM users WHERE lower(username) = $1 or lower(email) = $2`,
+		strings.ToLower(username), strings.ToLower(email))
 	if err != nil {
 		log.Println("user repository: GetUserByUsernameOrEmail: error getting user:", err)
 		return nil, err
