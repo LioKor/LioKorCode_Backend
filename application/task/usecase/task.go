@@ -38,10 +38,20 @@ func (tuc *TaskUseCase) DeleteTask(id uint64, uid uint64) error {
 	return tuc.repo.DeleteTask(id, uid)
 }
 
-func (tuc *TaskUseCase) GetTasks(page int) (models.ShortTasks, error) {
+func (tuc *TaskUseCase) GetTasks(uid uint64, page int) (models.ShortTasks, error) {
 	tsks, err := tuc.repo.GetTasks(page)
 	if err != nil {
 		return models.ShortTasks{}, err
+	}
+	if uid == 0 {
+		return *tsks, nil
+	}
+	for _, tsk := range *tsks {
+		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
+		if err != nil {
+			return models.ShortTasks{}, err
+		}
+		(&tsk).IsCleared = isDone
 	}
 
 	return *tsks, nil

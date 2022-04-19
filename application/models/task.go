@@ -16,6 +16,8 @@ type Task struct {
 	Hints       string     `json:"hints"`
 	TestsAmount int        `json:"testsAmount"`
 	Tests       InputTests `json:"tests"`
+	Author      string     `json:"author"`
+	AuthorId    string     `json:"authorId"`
 	IsCleared   bool       `json:"isCleared"`
 }
 
@@ -24,6 +26,9 @@ type ShortTask struct {
 	Title       string `json:"name"`
 	Description string `json:"description"`
 	TestAmount  int    `json:"testsAmount"`
+	IsCleared   bool   `json:"isCleared"`
+	Creator     string `json:"creator"`
+	CreatorId   uint64 `json:"creatorId"`
 }
 
 //easyjson:json
@@ -61,6 +66,11 @@ type TaskSQL struct {
 
 //easyjson:json
 type TasksSQL []TaskSQL
+
+type ClearedTask struct {
+	Uid    uint64
+	TaskId string
+}
 
 func (tsql TaskSQL) ConvertToTask(isCreator bool, isCleared bool) *Task {
 	t := &Task{}

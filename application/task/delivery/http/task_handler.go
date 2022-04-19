@@ -80,7 +80,24 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 		p = 1
 	}
 
-	tsks, err := th.uc.GetTasks(p)
+	uid := uint64(0)
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: getTasks: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		uid = 0
+	} else {
+		uid, err = th.uuc.CheckSession(cookie.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	tsks, err := th.uc.GetTasks(uid, p)
 	if err != nil {
 		return err
 	}

@@ -92,8 +92,9 @@ func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT id, title, description, test_amount FROM tasks WHERE 
-		is_private = false ORDER BY id DESC LIMIT $1 OFFSET $2`,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t, users u WHERE 
+		is_private = false and t.creator = u.id ORDER BY id DESC LIMIT $1 OFFSET $2`,
 		constants.TasksPerPage, (page-1)*constants.TasksPerPage)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)

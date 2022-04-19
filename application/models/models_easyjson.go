@@ -990,6 +990,10 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels10(in *jlexer.Lexer, out *T
 			out.TestsAmount = int(in.Int())
 		case "tests":
 			(out.Tests).UnmarshalEasyJSON(in)
+		case "author":
+			out.Author = string(in.String())
+		case "authorId":
+			out.AuthorId = string(in.String())
 		case "isCleared":
 			out.IsCleared = bool(in.Bool())
 		default:
@@ -1045,6 +1049,16 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels10(out *jwriter.Writer, in 
 		const prefix string = ",\"tests\":"
 		out.RawString(prefix)
 		(in.Tests).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"author\":"
+		out.RawString(prefix)
+		out.String(string(in.Author))
+	}
+	{
+		const prefix string = ",\"authorId\":"
+		out.RawString(prefix)
+		out.String(string(in.AuthorId))
 	}
 	{
 		const prefix string = ",\"isCleared\":"
@@ -2086,7 +2100,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels20(in *jlexer.Lexer, out *S
 		in.Delim('[')
 		if *out == nil {
 			if !in.IsDelim(']') {
-				*out = make(ShortTasks, 0, 1)
+				*out = make(ShortTasks, 0, 0)
 			} else {
 				*out = ShortTasks{}
 			}
@@ -2170,6 +2184,12 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels21(in *jlexer.Lexer, out *S
 			out.Description = string(in.String())
 		case "testsAmount":
 			out.TestAmount = int(in.Int())
+		case "isCleared":
+			out.IsCleared = bool(in.Bool())
+		case "creator":
+			out.Creator = string(in.String())
+		case "creatorId":
+			out.CreatorId = uint64(in.Uint64())
 		default:
 			in.SkipRecursive()
 		}
@@ -2203,6 +2223,21 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels21(out *jwriter.Writer, in 
 		const prefix string = ",\"testsAmount\":"
 		out.RawString(prefix)
 		out.Int(int(in.TestAmount))
+	}
+	{
+		const prefix string = ",\"isCleared\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.IsCleared))
+	}
+	{
+		const prefix string = ",\"creator\":"
+		out.RawString(prefix)
+		out.String(string(in.Creator))
+	}
+	{
+		const prefix string = ",\"creatorId\":"
+		out.RawString(prefix)
+		out.Uint64(uint64(in.CreatorId))
 	}
 	out.RawByte('}')
 }
@@ -2533,7 +2568,80 @@ func (v *IdValue) UnmarshalJSON(data []byte) error {
 func (v *IdValue) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeLiokoreduApplicationModels25(l, v)
 }
-func easyjsonD2b7633eDecodeLiokoreduApplicationModels26(in *jlexer.Lexer, out *Avatar) {
+func easyjsonD2b7633eDecodeLiokoreduApplicationModels26(in *jlexer.Lexer, out *ClearedTask) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "Uid":
+			out.Uid = uint64(in.Uint64())
+		case "TaskId":
+			out.TaskId = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeLiokoreduApplicationModels26(out *jwriter.Writer, in ClearedTask) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"Uid\":"
+		out.RawString(prefix[1:])
+		out.Uint64(uint64(in.Uid))
+	}
+	{
+		const prefix string = ",\"TaskId\":"
+		out.RawString(prefix)
+		out.String(string(in.TaskId))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ClearedTask) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeLiokoreduApplicationModels26(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ClearedTask) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeLiokoreduApplicationModels26(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ClearedTask) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeLiokoreduApplicationModels26(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ClearedTask) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeLiokoreduApplicationModels26(l, v)
+}
+func easyjsonD2b7633eDecodeLiokoreduApplicationModels27(in *jlexer.Lexer, out *Avatar) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -2564,7 +2672,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels26(in *jlexer.Lexer, out *A
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeLiokoreduApplicationModels26(out *jwriter.Writer, in Avatar) {
+func easyjsonD2b7633eEncodeLiokoreduApplicationModels27(out *jwriter.Writer, in Avatar) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -2579,23 +2687,23 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels26(out *jwriter.Writer, in 
 // MarshalJSON supports json.Marshaler interface
 func (v Avatar) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeLiokoreduApplicationModels26(&w, v)
+	easyjsonD2b7633eEncodeLiokoreduApplicationModels27(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Avatar) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeLiokoreduApplicationModels26(w, v)
+	easyjsonD2b7633eEncodeLiokoreduApplicationModels27(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Avatar) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeLiokoreduApplicationModels26(&r, v)
+	easyjsonD2b7633eDecodeLiokoreduApplicationModels27(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Avatar) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeLiokoreduApplicationModels26(l, v)
+	easyjsonD2b7633eDecodeLiokoreduApplicationModels27(l, v)
 }
