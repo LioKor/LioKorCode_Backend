@@ -256,7 +256,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels3(in *jlexer.Lexer, out *Us
 			continue
 		}
 		switch key {
-		case "Id":
+		case "id":
 			out.Id = uint64(in.Uint64())
 		case "username":
 			out.Username = string(in.String())
@@ -291,7 +291,7 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels3(out *jwriter.Writer, in U
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Id\":"
+		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.Id))
 	}
