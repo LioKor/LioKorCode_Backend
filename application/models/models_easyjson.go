@@ -276,7 +276,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels3(in *jlexer.Lexer, out *Us
 			out.Verified = bool(in.Bool())
 		case "isAdmin":
 			out.IsAdmin = bool(in.Bool())
-		case "token":
+		case "jwtToken":
 			out.JWT = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -338,7 +338,7 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels3(out *jwriter.Writer, in U
 		out.Bool(bool(in.IsAdmin))
 	}
 	{
-		const prefix string = ",\"token\":"
+		const prefix string = ",\"jwtToken\":"
 		out.RawString(prefix)
 		out.String(string(in.JWT))
 	}
