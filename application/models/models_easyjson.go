@@ -262,8 +262,6 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels3(in *jlexer.Lexer, out *Us
 			out.Username = string(in.String())
 		case "email":
 			out.Email = string(in.String())
-		case "password":
-			out.Password = string(in.String())
 		case "fullname":
 			out.Fullname = string(in.String())
 		case "avatarUrl":
@@ -306,11 +304,6 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels3(out *jwriter.Writer, in U
 		const prefix string = ",\"email\":"
 		out.RawString(prefix)
 		out.String(string(in.Email))
-	}
-	{
-		const prefix string = ",\"password\":"
-		out.RawString(prefix)
-		out.String(string(in.Password))
 	}
 	{
 		const prefix string = ",\"fullname\":"

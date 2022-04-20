@@ -9,7 +9,7 @@ type User struct {
 	Id         uint64
 	Username   string    `json:"username"`
 	Email      string    `json:"email"`
-	Password   string    `json:"password"`
+	Password   string    `json:"-"`
 	Fullname   string    `json:"fullname"`
 	AvatarUrl  string    `json:"avatarUrl"`
 	JoinedDate time.Time `json:"joinedDate"`
