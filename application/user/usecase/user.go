@@ -57,7 +57,7 @@ func (uuc *UserUseCase) GetUserByUid(uid uint64) (*models.User, error) {
 	if err != nil {
 		return &models.User{}, err
 	}
-	(*usr).JWT = generators.CreateToken(usr)
+	usr.JWT = generators.CreateToken(usr)
 
 	return usr, nil
 }
