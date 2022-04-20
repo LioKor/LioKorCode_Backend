@@ -15,6 +15,7 @@ type User struct {
 	JoinedDate time.Time `json:"joinedDate"`
 	Verified   bool      `json:"verified"`
 	IsAdmin    bool      `json:"isAdmin"`
+	JWT        string    `json:"token"`
 }
 
 type Avatar struct {

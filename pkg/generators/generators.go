@@ -7,12 +7,16 @@ import (
 	"errors"
 	"image"
 	"image/jpeg"
+	"liokoredu/application/models"
 	"liokoredu/pkg/constants"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 func init() {
@@ -137,4 +141,28 @@ func CreateCookie(n uint8) *http.Cookie {
 	}
 
 	return newCookie
+}
+
+func CreateToken(usr *models.User) string {
+	/*
+		- id
+		- username
+		- fullname
+		- email
+		- avatarUrl
+	*/
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":        usr.Id,
+		"username":  usr.Username,
+		"fullname":  usr.Fullname,
+		"email":     usr.Email,
+		"avatarUrl": usr.AvatarUrl,
+	})
+
+	tokenString, err := token.SignedString([]byte(constants.SignKey))
+	if err != nil {
+		log.Println("error generating token:", err)
+	}
+
+	return tokenString
 }

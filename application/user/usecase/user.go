@@ -53,7 +53,13 @@ func (uuc *UserUseCase) UpdateUser(uid uint64, usr models.UserUpdate) error {
 
 // GetUserByUid implements user.UseCase
 func (uuc *UserUseCase) GetUserByUid(uid uint64) (*models.User, error) {
-	return uuc.repo.GetUserByUid(uid)
+	usr, err := uuc.repo.GetUserByUid(uid)
+	if err != nil {
+		return &models.User{}, err
+	}
+	(*usr).JWT = generators.CreateToken(usr)
+
+	return usr, nil
 }
 
 // DeleteSession implements user.UseCase

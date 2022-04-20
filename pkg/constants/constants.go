@@ -22,6 +22,7 @@ const (
 	RedactorServicePort = ":3001"
 	WSLength            = 16
 	MaxSizeKB           = 8184
+	SignKey             = "liokoredu"
 )
 
 var LetterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
