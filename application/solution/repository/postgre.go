@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/georgysavva/scany/pgxscan"
@@ -113,6 +114,9 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 }
 
 func (sd *SolutionDatabase) UpdateSolution(id uint64, upd *models.SolutionUpdate) error {
+	// PostgreSQL unable to store \x00 in string field
+	upd.CheckMessage = strings.Replace(upd.CheckMessage, "\x00", "", -1)
+
 	_, err := sd.pool.Exec(context.Background(),
 		`UPDATE solutions SET check_result = $1, tests_passed = $2, check_message = $3,
 		check_time = $4, compile_time = $5, checked_date_time = $6 WHERE id = $7`,
