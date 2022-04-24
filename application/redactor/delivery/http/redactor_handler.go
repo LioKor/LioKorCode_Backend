@@ -42,7 +42,7 @@ func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	defer c.Request().Body.Close()
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
-	sln := &models.SolutionFiles{}
+	sln := &models.Solution{}
 
 	if err := easyjson.UnmarshalFromReader(c.Request().Body, sln); err != nil {
 		log.Println(err)
@@ -135,7 +135,7 @@ func (rh *RedactorHandler) GetFileText(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-func createRoom(code models.SolutionFiles) (string, *Session) {
+func createRoom(code models.Solution) (string, *Session) {
 	roomId := generators.RandStringRunes(constants.WSLength)
 	log.Println("created room:", roomId)
 	session := NewSession(code)

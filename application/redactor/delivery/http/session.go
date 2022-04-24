@@ -22,10 +22,10 @@ type Session struct {
 	FileSessions map[string]*session.Session
 }
 
-func NewSession(code models.SolutionFiles) *Session {
+func NewSession(code models.Solution) *Session {
 	s := map[string]*session.Session{}
-	for _, elem := range code {
-		s[elem.Filename] = session.New(elem.Text)
+	for key, value := range code.SourceCode {
+		s[key] = session.New(value.(string))
 	}
 	return &Session{
 		Connections:  map[*Connection]struct{}{},
