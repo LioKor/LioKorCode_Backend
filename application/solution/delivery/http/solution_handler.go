@@ -76,7 +76,6 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Println(sln.SourceCode)
 	testAmount := task.TestsAmount
 
 	solId, err := sh.UseCase.InsertSolution(iid, uid, sln.SourceCode, testAmount)
