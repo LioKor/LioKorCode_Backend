@@ -10,7 +10,15 @@ type Solution struct {
 }
 
 type SolutionFile struct {
-	SourceCode string `json:"sourceCode"`
+	Filename string `json:"filename"`
+	Text     string `json:"text"`
+}
+
+//easyjson:json
+type SolutionFiles []SolutionFile
+
+type RedactorFile struct {
+	Text string `json:"text"`
 }
 
 type SolutionSend struct {

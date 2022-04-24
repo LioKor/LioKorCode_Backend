@@ -31,11 +31,16 @@ func (c *Connection) Handle() error {
 	s := c.Session
 	log.Println("got session")
 
-	err := c.Send(&Event{"doc", map[string]interface{}{
-		"document": s.Document,
-		"revision": len(c.Session.Operations),
-		"clients":  s.Clients,
-	}})
+	var err error
+
+	for filename, source := range s.FileSessions {
+		err = c.Send(&Event{"doc", map[string]interface{}{
+			"document": source.Document,
+			"revision": len(source.Operations),
+			"clients":  source.Clients,
+			"filename": filename,
+		}})
+	}
 	if err != nil {
 		log.Println(err)
 		return err
@@ -55,10 +60,7 @@ func (c *Connection) Handle() error {
 	}
 
 	s.UnregisterConnection(c)
-	c.Broadcast(&Event{"quit", map[string]interface{}{
-		"client_id": c.ID,
-		"username":  s.Clients[c.ID].Name,
-	}})
+
 	return nil
 }
 

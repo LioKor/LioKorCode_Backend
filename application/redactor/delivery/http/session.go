@@ -1,6 +1,7 @@
 package http
 
 import (
+	"liokoredu/application/models"
 	"log"
 	"strconv"
 	"sync"
@@ -18,14 +19,18 @@ type Session struct {
 
 	lock sync.Mutex
 
-	*session.Session
+	FileSessions map[string]*session.Session
 }
 
-func NewSession(document string) *Session {
+func NewSession(code models.SolutionFiles) *Session {
+	s := map[string]*session.Session{}
+	for _, elem := range code {
+		s[elem.Filename] = session.New(elem.Text)
+	}
 	return &Session{
-		Connections: map[*Connection]struct{}{},
-		EventChan:   make(chan ConnEvent),
-		Session:     session.New(document),
+		Connections:  map[*Connection]struct{}{},
+		EventChan:    make(chan ConnEvent),
+		FileSessions: s,
 	}
 }
 
@@ -35,17 +40,36 @@ func (s *Session) RegisterConnection(c *Connection) {
 	c.ID = id
 	s.nextConnID++
 	s.Connections[c] = struct{}{}
-	s.AddClient(c.ID)
+	for filename := range s.FileSessions {
+		s.FileSessions[filename].AddClient(c.ID)
+	}
 	s.lock.Unlock()
+}
+
+func (s *Session) GetDocument(filename string) string {
+	s.lock.Lock()
+	text := s.FileSessions[filename].Document
+	s.lock.Unlock()
+
+	return text
 }
 
 func (s *Session) UnregisterConnection(c *Connection) {
 	s.lock.Lock()
 	delete(s.Connections, c)
-	if c.ID != "" {
-		s.RemoveClient(c.ID)
+	var filename string
+	for filename = range s.FileSessions {
+		s.FileSessions[filename].RemoveClient(c.ID)
 	}
+
 	s.lock.Unlock()
+
+	for filename = range s.FileSessions {
+		c.Broadcast(&Event{"quit", map[string]interface{}{
+			"client_id": c.ID,
+			"username":  s.FileSessions[filename].Clients[c.ID].Name,
+		}})
+	}
 }
 
 func (s *Session) HandleEvents() {
@@ -73,7 +97,10 @@ func (s *Session) HandleEvents() {
 				break
 			}
 
-			s.SetName(c.ID, username)
+			for filename := range s.FileSessions {
+				s.FileSessions[filename].SetName(c.ID, username)
+			}
+
 			log.Println(c.ID)
 
 			err := c.Send(&Event{"registered", c.ID})
@@ -86,9 +113,20 @@ func (s *Session) HandleEvents() {
 				"username":  username,
 			}})
 		case "op":
-			// data: [revision, ops, selection?]
-			data, ok := e.Data.([]interface{})
+			// filename: "text", data: [revision, ops, selection?]
+			source, ok := e.Data.(map[string]interface{})
 			if !ok {
+				log.Println("error getting source from op")
+				break
+			}
+			filename, ok := source["filename"].(string)
+			if !ok {
+				log.Println("error converting filename to string:", filename)
+				break
+			}
+			data, ok := source["data"].([]interface{})
+			if !ok {
+				log.Println("error getting data from op")
 				break
 			}
 			if len(data) < 2 {
@@ -122,7 +160,7 @@ func (s *Session) HandleEvents() {
 				top.Meta = sel
 			}
 
-			top2, err := s.AddOperation(rev, top)
+			top2, err := s.FileSessions[filename].AddOperation(rev, top)
 			if err != nil {
 				break
 			}
@@ -133,22 +171,35 @@ func (s *Session) HandleEvents() {
 			}
 
 			if sel, ok := top2.Meta.(*selection.Selection); ok {
-				s.SetSelection(c.ID, sel)
-				c.Broadcast(&Event{"op", []interface{}{c.ID, top2.Marshal(), sel.Marshal()}})
+				s.FileSessions[filename].SetSelection(c.ID, sel)
+				c.Broadcast(&Event{"op", map[string]interface{}{"data": []interface{}{c.ID, top2.Marshal(), sel.Marshal()}, "filename": filename}})
 			} else {
-				c.Broadcast(&Event{"op", []interface{}{c.ID, top2.Marshal()}})
+				c.Broadcast(&Event{"op", map[string]interface{}{"data": []interface{}{c.ID, top2.Marshal()}, "filename": filename}})
 			}
 		case "sel":
-			data, ok := e.Data.(map[string]interface{})
+			source, ok := e.Data.(map[string]interface{})
 			if !ok {
+				log.Println("error getting source from op")
 				break
 			}
+			filename, ok := source["filename"].(string)
+			if !ok {
+				log.Println("error converting filename to string:", filename)
+				break
+			}
+			data, ok := source["data"].(map[string]interface{})
+			if !ok {
+				log.Println("error getting data from op")
+				break
+			}
+
 			sel, err := selection.Unmarshal(data)
 			if err != nil {
 				break
 			}
-			s.SetSelection(c.ID, sel)
-			c.Broadcast(&Event{"sel", []interface{}{c.ID, sel.Marshal()}})
+			s.FileSessions[filename].SetSelection(c.ID, sel)
+			c.Broadcast(&Event{"sel", map[string]interface{}{"data": []interface{}{c.ID, sel.Marshal()}, "filename": filename}})
+			//[]interface{}{c.ID, sel.Marshal()}})
 		}
 	}
 }
