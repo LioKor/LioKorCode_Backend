@@ -83,5 +83,5 @@ func NewServer() *Server {
 }
 
 func (s Server) ListenAndServe() {
-	s.e.Logger.Fatal(s.e.Start(":1323"))
+	s.e.Logger.Fatal(s.e.Start("127.0.0.1:9091"))
 }

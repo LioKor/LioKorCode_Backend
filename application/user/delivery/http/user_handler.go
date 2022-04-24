@@ -43,6 +43,8 @@ func (uh *UserHandler) getUserProfile(c echo.Context) error {
 		return err
 	}
 
+	usr.Password = ""
+
 	if _, err = easyjson.MarshalToWriter(usr, c.Response().Writer); err != nil {
 		log.Println(c, err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

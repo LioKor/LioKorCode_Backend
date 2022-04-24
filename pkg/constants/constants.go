@@ -13,7 +13,7 @@ const (
 	CookieLength        = uint8(32)
 	SessionCookieName   = "SID"
 	SaltLength          = 8
-	PythonAddress       = "http://10.106.0.2/check_task/multiple_files"
+	PythonAddress       = "http://167.172.51.136/check_task/multiple_files"
 	SolutionsDir        = "/store/"
 	AvatartDir          = "/media/avatars/"
 	AvatartSalt         = 8

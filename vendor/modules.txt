@@ -1,6 +1,8 @@
 # github.com/aymerick/douceur v0.2.0
 github.com/aymerick/douceur/css
 github.com/aymerick/douceur/parser
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
 # github.com/georgysavva/scany v0.3.0
 github.com/georgysavva/scany/dbscan
 github.com/georgysavva/scany/pgxscan

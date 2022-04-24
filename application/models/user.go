@@ -8,8 +8,8 @@ import (
 type User struct {
 	Id         uint64    `json:"id"`
 	Username   string    `json:"username"`
+	Password   string    `json:"password"`
 	Email      string    `json:"email"`
-	Password   string    `json:"-"`
 	Fullname   string    `json:"fullname"`
 	AvatarUrl  string    `json:"avatarUrl"`
 	JoinedDate time.Time `json:"joinedDate"`

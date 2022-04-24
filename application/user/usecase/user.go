@@ -89,7 +89,7 @@ func (uuc *UserUseCase) CreateUser(usr models.User) (uint64, error) {
 	}
 
 	if u != nil {
-		return 0, echo.NewHTTPError(409, "user with this usermame or email already exists")
+		return 0, echo.NewHTTPError(409, "user with this username or email already exists")
 	}
 
 	location, _ := time.LoadLocation("Europe/London")

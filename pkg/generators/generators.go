@@ -103,12 +103,12 @@ func HashPassword(oldPassword string) string {
 }
 
 func CheckHashedPassword(databasePassword string, gotPassword string) bool {
-	salt := databasePassword[:8]
+	salt := databasePassword[:constants.SaltLength]
 	hash := sha256.New()
 	_, _ = hash.Write([]byte(salt + gotPassword))
 	gotPassword = base64.URLEncoding.EncodeToString(hash.Sum(nil))
 
-	return gotPassword == databasePassword[8:]
+	return gotPassword == databasePassword[constants.SaltLength:]
 }
 
 func CreateCookieValue(n uint8) string {
