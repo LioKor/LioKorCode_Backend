@@ -40,6 +40,7 @@ func (c *Connection) Handle() error {
 			"clients":  source.Clients,
 			"filename": filename,
 		}})
+		break
 	}
 	if err != nil {
 		log.Println(err)

@@ -132,7 +132,7 @@ func (rh *RedactorHandler) GetFileText(c echo.Context) error {
 		}
 	*/
 
-	return c.JSON(http.StatusOK, nil)
+	return nil
 }
 
 func createRoom(code models.Solution) (string, *Session) {
