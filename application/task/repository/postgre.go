@@ -93,8 +93,12 @@ func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
-		FROM tasks t, users u WHERE 
-		is_private = false and t.creator = u.id ORDER BY id DESC LIMIT $1 OFFSET $2`,
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false 
+			ORDER BY id DESC 
+			LIMIT $1 
+			OFFSET $2`,
 		constants.TasksPerPage, (page-1)*constants.TasksPerPage)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
@@ -107,8 +111,13 @@ func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 func (td *TaskDatabase) GetUserTasks(uid uint64, page int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT id, title, description, test_amount FROM tasks WHERE 
-		is_private = false and creator = $1 ORDER BY id DESC LIMIT $2 OFFSET $3`,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username AS creator
+			FROM tasks t
+ 			JOIN users u ON u.id = t.creator
+			WHERE is_private = false AND t.creator = $1 
+			ORDER BY id DESC 
+			LIMIT $2 
+			OFFSET $3`,
 		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
