@@ -46,6 +46,16 @@ func (s *Session) RegisterConnection(c *Connection) {
 	s.lock.Unlock()
 }
 
+func (s *Session) GetFiles() *models.Solution {
+	sln := &models.Solution{}
+	s.lock.Lock()
+	for filename, text := range s.FileSessions {
+		sln.SourceCode[filename] = text
+	}
+	s.lock.Unlock()
+	return sln
+}
+
 func (s *Session) GetDocument(filename string) string {
 	s.lock.Lock()
 	text := s.FileSessions[filename].Document
@@ -59,17 +69,14 @@ func (s *Session) UnregisterConnection(c *Connection) {
 	delete(s.Connections, c)
 	var filename string
 	for filename = range s.FileSessions {
-		s.FileSessions[filename].RemoveClient(c.ID)
-	}
-
-	s.lock.Unlock()
-
-	for filename = range s.FileSessions {
 		c.Broadcast(&Event{"quit", map[string]interface{}{
 			"client_id": c.ID,
 			"username":  s.FileSessions[filename].Clients[c.ID].Name,
 		}})
+		s.FileSessions[filename].RemoveClient(c.ID)
 	}
+
+	s.lock.Unlock()
 }
 
 func (s *Session) HandleEvents() {
@@ -189,7 +196,7 @@ func (s *Session) HandleEvents() {
 			}
 			data, ok := source["data"].(map[string]interface{})
 			if !ok {
-				log.Println("error getting data from op")
+				log.Println("error getting data from sel")
 				break
 			}
 

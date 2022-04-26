@@ -9,6 +9,10 @@ type Solution struct {
 	SourceCode map[string]interface{} `json:"sourceCode"`
 }
 
+type Files struct {
+	Files []string `json:"files"`
+}
+
 type SolutionFile struct {
 	Filename string `json:"filename"`
 	Text     string `json:"text"`

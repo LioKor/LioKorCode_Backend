@@ -8,6 +8,7 @@ import (
 	"liokoredu/pkg/generators"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
@@ -34,8 +35,9 @@ func CreateRedactorHandler(e *echo.Echo, a middleware.Auth) {
 
 	e.POST("/api/v1/redactor", redactorHandler.CreateConnection)
 	e.GET("/api/v1/ws/redactor/:id", redactorHandler.ConnectToRoom)
-	e.GET("/api/v1/redactor/:id/:filepath", redactorHandler.GetFileText)
-
+	e.GET("/api/v1/redactor/:id/files/:filepath", redactorHandler.GetFileText)
+	e.GET("/api/v1/redactor/:id/files/tree", redactorHandler.GetFileNames)
+	e.GET("/api/v1/redactor/:id/files", redactorHandler.GetFiles)
 }
 
 func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
@@ -51,20 +53,6 @@ func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	log.Println(sln)
 
 	roomId, _ := createRoom(*sln)
-	//serveWs(c, session)
-
-	/*
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-	*/
-
-	//if _, err := easyjson.MarshalToWriter(&models.IdValue{Id: roomId}, c.Response().Writer); err != nil {
-	//	log.Println(err)
-	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	//}
 
 	return c.JSON(http.StatusOK, &models.IdValue{Id: roomId})
 }
@@ -81,21 +69,6 @@ func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 	}
 	serveWs(c, s)
 
-	//uid := c.Get(constants.UserIdKey).(uint64)
-	/*
-
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-
-		if _, err = easyjson.MarshalToWriter(&models.IdValue{Id: id}, c.Response().Writer); err != nil {
-			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-	*/
-
 	return c.JSON(http.StatusOK, nil)
 }
 
@@ -106,33 +79,53 @@ func (rh *RedactorHandler) GetFileText(c echo.Context) error {
 	id := c.Param(constants.IdKey)
 	log.Println(id)
 	filename := c.Param("filepath")
+	f, _ := url.QueryUnescape(filename)
+	log.Println("got request for file:", f)
 
 	s := getRoom(id)
 	if s == nil {
 		return c.JSON(http.StatusNotFound, nil)
 	}
-	text := &models.RedactorFile{Text: s.GetDocument(filename)}
+	text := &models.RedactorFile{Text: s.GetDocument(f)}
 	if _, err := easyjson.MarshalToWriter(text, c.Response().Writer); err != nil {
 		log.Println(err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	//uid := c.Get(constants.UserIdKey).(uint64)
-	/*
-
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-
-		if _, err = easyjson.MarshalToWriter(&models.IdValue{Id: id}, c.Response().Writer); err != nil {
-			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-	*/
-
 	return nil
+}
+
+func (rh *RedactorHandler) GetFiles(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	id := c.Param(constants.IdKey)
+	log.Println(id)
+	s := getRoom(id)
+	if s == nil {
+		return c.JSON(http.StatusNotFound, nil)
+	}
+
+	return c.JSON(http.StatusOK, s.GetFiles())
+}
+
+func (rh *RedactorHandler) GetFileNames(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	id := c.Param(constants.IdKey)
+	log.Println(id)
+	s := getRoom(id)
+	if s == nil {
+		return c.JSON(http.StatusNotFound, nil)
+	}
+
+	fls := models.Files{}
+	for filename := range s.FileSessions {
+		fls.Files = append(fls.Files, filename)
+	}
+
+	return c.JSON(http.StatusOK, fls)
 }
 
 func createRoom(code models.Solution) (string, *Session) {
