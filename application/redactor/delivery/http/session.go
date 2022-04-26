@@ -34,23 +34,28 @@ func NewSession(code models.Solution) *Session {
 	}
 }
 
-func (s *Session) RegisterConnection(c *Connection) {
+func (s *Session) RegisterConnection(c *Connection, filename string) {
 	s.lock.Lock()
 	id := strconv.Itoa(s.nextConnID)
 	c.ID = id
 	s.nextConnID++
 	s.Connections[c] = struct{}{}
-	for filename := range s.FileSessions {
-		s.FileSessions[filename].AddClient(c.ID)
-	}
+	s.FileSessions[filename].AddClient(c.ID, filename)
+	s.lock.Unlock()
+}
+
+func (s *Session) RegisterConnectionToFileSession(c *Connection, filename string) {
+	s.lock.Lock()
+	s.FileSessions[filename].AddClient(c.ID, filename)
 	s.lock.Unlock()
 }
 
 func (s *Session) GetFiles() *models.Solution {
 	sln := &models.Solution{}
+	sln.SourceCode = make(map[string]interface{})
 	s.lock.Lock()
 	for filename, text := range s.FileSessions {
-		sln.SourceCode[filename] = text
+		sln.SourceCode[filename] = text.Document
 	}
 	s.lock.Unlock()
 	return sln
@@ -64,18 +69,16 @@ func (s *Session) GetDocument(filename string) string {
 	return text
 }
 
-func (s *Session) UnregisterConnection(c *Connection) {
+func (s *Session) UnregisterConnectionFromFileSession(c *Connection, filename string) {
+	s.lock.Lock()
+	s.FileSessions[filename].RemoveClient(c.ID)
+	s.lock.Unlock()
+}
+
+func (s *Session) UnregisterConnection(c *Connection, filename string) {
 	s.lock.Lock()
 	delete(s.Connections, c)
-	var filename string
-	for filename = range s.FileSessions {
-		c.Broadcast(&Event{"quit", map[string]interface{}{
-			"client_id": c.ID,
-			"username":  s.FileSessions[filename].Clients[c.ID].Name,
-		}})
-		s.FileSessions[filename].RemoveClient(c.ID)
-	}
-
+	s.FileSessions[filename].RemoveClient(c.ID)
 	s.lock.Unlock()
 }
 
@@ -86,7 +89,6 @@ func (s *Session) HandleEvents() {
 		if !ok {
 			return
 		}
-		log.Println("aaa")
 
 		c := e.Conn
 		log.Println(e.Name)
@@ -100,7 +102,6 @@ func (s *Session) HandleEvents() {
 			username, ok := data["username"].(string)
 			log.Println(username, ok)
 			if !ok || username == "" {
-				log.Println(username)
 				break
 			}
 
@@ -207,6 +208,36 @@ func (s *Session) HandleEvents() {
 			s.FileSessions[filename].SetSelection(c.ID, sel)
 			c.Broadcast(&Event{"sel", map[string]interface{}{"data": []interface{}{c.ID, sel.Marshal()}, "filename": filename}})
 			//[]interface{}{c.ID, sel.Marshal()}})
+		case "file":
+			data, ok := e.Data.(map[string]interface{})
+			log.Println(data, ok)
+			if !ok {
+				break
+			}
+
+			newFileName, ok := data["new"].(string)
+			log.Println(newFileName, ok)
+			if !ok || newFileName == "" {
+				log.Println(newFileName)
+				break
+			}
+
+			var username string
+			var filename string
+			var filesession *session.Session
+
+			// we have to delete user from old
+			for filename, filesession = range s.FileSessions {
+				client := filesession.Clients[c.ID]
+				if client != nil {
+					username = client.Name
+					break
+				}
+			}
+
+			s.UnregisterConnectionFromFileSession(c, filename)
+			s.RegisterConnectionToFileSession(c, newFileName)
+			s.FileSessions[newFileName].SetName(c.ID, username)
 		}
 	}
 }

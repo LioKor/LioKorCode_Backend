@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
+	"github.com/nitrous-io/ot.go/ot/session"
 )
 
 type Event struct {
@@ -32,12 +33,14 @@ func (c *Connection) Handle() error {
 	log.Println("got session")
 
 	var err error
+	var filename string
+	var filesession *session.Session
 
-	for filename, source := range s.FileSessions {
+	for filename, filesession = range s.FileSessions {
 		err = c.Send(&Event{"doc", map[string]interface{}{
-			"document": source.Document,
-			"revision": len(source.Operations),
-			"clients":  source.Clients,
+			"document": filesession.Document,
+			"revision": len(filesession.Operations),
+			"clients":  filesession.Clients,
 			"filename": filename,
 		}})
 		break
@@ -48,7 +51,7 @@ func (c *Connection) Handle() error {
 	}
 	log.Println("sent")
 
-	s.RegisterConnection(c)
+	s.RegisterConnection(c, filename)
 	log.Println("registered connection")
 
 	for {
@@ -60,7 +63,19 @@ func (c *Connection) Handle() error {
 		s.EventChan <- ConnEvent{c, e}
 	}
 
-	s.UnregisterConnection(c)
+	// we have to get current file, where client is
+	for filename, filesession = range s.FileSessions {
+		client := filesession.Clients[c.ID]
+		if client != nil {
+			break
+		}
+	}
+
+	s.UnregisterConnection(c, filename)
+	c.Broadcast(&Event{"quit", map[string]interface{}{
+		"client_id": c.ID,
+		"username":  s.FileSessions[filename].Clients[c.ID].Name,
+	}})
 
 	return nil
 }
