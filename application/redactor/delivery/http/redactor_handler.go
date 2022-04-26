@@ -39,7 +39,6 @@ func CreateRedactorHandler(e *echo.Echo, a middleware.Auth) {
 
 func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	defer c.Request().Body.Close()
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	sln := &models.SolutionFile{}
 
@@ -50,27 +49,12 @@ func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	log.Println(sln)
 
 	roomId, _ := createRoom(sln.SourceCode)
-	//serveWs(c, session)
-
-	/*
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-	*/
-
-	//if _, err := easyjson.MarshalToWriter(&models.IdValue{Id: roomId}, c.Response().Writer); err != nil {
-	//	log.Println(err)
-	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	//}
 
 	return c.JSON(http.StatusOK, &models.IdValue{Id: roomId})
 }
 
 func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 	defer c.Request().Body.Close()
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	id := c.Param(constants.IdKey)
 	log.Println(id)
@@ -79,21 +63,6 @@ func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, nil)
 	}
 	serveWs(c, s)
-
-	//uid := c.Get(constants.UserIdKey).(uint64)
-	/*
-
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-
-		if _, err = easyjson.MarshalToWriter(&models.IdValue{Id: id}, c.Response().Writer); err != nil {
-			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-	*/
 
 	return c.JSON(http.StatusOK, nil)
 }
