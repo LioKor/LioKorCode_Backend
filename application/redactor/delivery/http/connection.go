@@ -71,7 +71,11 @@ func (c *Connection) Handle() error {
 		}
 	}
 
+	log.Println("quit")
 	s.UnregisterConnection(c, filename)
+	if s.FileSessions[filename].Clients[c.ID] == nil {
+		return nil
+	}
 	c.Broadcast(&Event{"quit", map[string]interface{}{
 		"client_id": c.ID,
 		"username":  s.FileSessions[filename].Clients[c.ID].Name,

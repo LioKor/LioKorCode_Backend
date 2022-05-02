@@ -238,6 +238,13 @@ func (s *Session) HandleEvents() {
 			s.UnregisterConnectionFromFileSession(c, filename)
 			s.RegisterConnectionToFileSession(c, newFileName)
 			s.FileSessions[newFileName].SetName(c.ID, username)
+
+			c.Send(&Event{"doc", map[string]interface{}{
+				"document": s.FileSessions[newFileName].Document,
+				"revision": len(s.FileSessions[newFileName].Operations),
+				"clients":  s.FileSessions[newFileName].Clients,
+				"filename": newFileName,
+			}})
 		}
 	}
 }
