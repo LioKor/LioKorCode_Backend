@@ -173,10 +173,10 @@ func (s *Session) HandleEvents() {
 				break
 			}
 
-			//err = c.Send(&Event{"ok", nil})
-			//if err != nil {
-			//	break
-			//}
+			err = c.Send(&Event{"ok", nil})
+			if err != nil {
+				break
+			}
 
 			if sel, ok := top2.Meta.(*selection.Selection); ok {
 				s.FileSessions[filename].SetSelection(c.ID, sel)
