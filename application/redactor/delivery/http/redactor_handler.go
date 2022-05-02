@@ -73,7 +73,7 @@ func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 	}
 	serveWs(c, s, f)
 
-	return c.JSON(http.StatusOK, nil)
+	return nil
 }
 
 func (rh *RedactorHandler) GetFileText(c echo.Context) error {
