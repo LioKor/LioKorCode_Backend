@@ -34,7 +34,7 @@ func CreateRedactorHandler(e *echo.Echo, a middleware.Auth) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	e.POST("/api/v1/redactor", redactorHandler.CreateConnection)
-	e.GET("/api/v1/ws/redactor/:id", redactorHandler.ConnectToRoom)
+	e.GET("/api/v1/ws/redactor/:id/:filepath", redactorHandler.ConnectToRoom)
 	e.GET("/api/v1/redactor/:id/files/:filepath", redactorHandler.GetFileText)
 	e.GET("/api/v1/redactor/:id/files/tree", redactorHandler.GetFileNames)
 	e.GET("/api/v1/redactor/:id/files", redactorHandler.GetFiles)
@@ -63,11 +63,15 @@ func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 
 	id := c.Param(constants.IdKey)
 	log.Println(id)
+
+	filename := c.Param("filepath")
+	f, _ := url.QueryUnescape(filename)
+
 	s := getRoom(id)
 	if s == nil {
 		return c.JSON(http.StatusNotFound, nil)
 	}
-	serveWs(c, s)
+	serveWs(c, s, f)
 
 	return c.JSON(http.StatusOK, nil)
 }
@@ -142,7 +146,7 @@ func getRoom(id string) *Session {
 	return subscriptions[id]
 }
 
-func serveWs(c echo.Context, s *Session) {
+func serveWs(c echo.Context, s *Session, filename string) {
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		log.Println(err)
@@ -152,5 +156,5 @@ func serveWs(c echo.Context, s *Session) {
 		return
 	}
 
-	NewConnection(s, conn).Handle()
+	NewConnection(s, conn).Handle(filename)
 }

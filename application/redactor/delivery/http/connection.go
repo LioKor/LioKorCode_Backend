@@ -28,23 +28,18 @@ func NewConnection(session *Session, ws *websocket.Conn) *Connection {
 	return &Connection{Session: session, Ws: ws}
 }
 
-func (c *Connection) Handle() error {
+func (c *Connection) Handle(filename string) error {
 	s := c.Session
 	log.Println("got session")
 
 	var err error
-	var filename string
-	var filesession *session.Session
 
-	for filename, filesession = range s.FileSessions {
-		err = c.Send(&Event{"doc", map[string]interface{}{
-			"document": filesession.Document,
-			"revision": len(filesession.Operations),
-			"clients":  filesession.Clients,
-			"filename": filename,
-		}})
-		break
-	}
+	err = c.Send(&Event{"doc", map[string]interface{}{
+		"document": s.FileSessions[filename].Document,
+		"revision": len(s.FileSessions[filename].Operations),
+		"clients":  s.FileSessions[filename].Clients,
+		"filename": filename,
+	}})
 	if err != nil {
 		log.Println(err)
 		return err
@@ -63,6 +58,7 @@ func (c *Connection) Handle() error {
 		s.EventChan <- ConnEvent{c, e}
 	}
 
+	var filesession *session.Session
 	// we have to get current file, where client is
 	for filename, filesession = range s.FileSessions {
 		client := filesession.Clients[c.ID]

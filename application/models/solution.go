@@ -13,6 +13,10 @@ type Files struct {
 	Files []string `json:"files"`
 }
 
+type FileName struct {
+	Filename string `json:"filename"`
+}
+
 type SolutionFile struct {
 	Filename string `json:"filename"`
 	Text     string `json:"text"`

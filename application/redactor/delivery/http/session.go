@@ -40,13 +40,13 @@ func (s *Session) RegisterConnection(c *Connection, filename string) {
 	c.ID = id
 	s.nextConnID++
 	s.Connections[c] = struct{}{}
-	s.FileSessions[filename].AddClient(c.ID, filename)
+	s.FileSessions[filename].AddClient(c.ID)
 	s.lock.Unlock()
 }
 
 func (s *Session) RegisterConnectionToFileSession(c *Connection, filename string) {
 	s.lock.Lock()
-	s.FileSessions[filename].AddClient(c.ID, filename)
+	s.FileSessions[filename].AddClient(c.ID)
 	s.lock.Unlock()
 }
 
