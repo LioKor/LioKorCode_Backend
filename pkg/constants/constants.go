@@ -1,5 +1,7 @@
 package constants
 
+import "time"
+
 const (
 	IdKey               = "id"
 	UserIdKey           = "uid"
@@ -23,6 +25,13 @@ const (
 	WSLength            = 16
 	MaxSizeKB           = 8184
 	SignKey             = "liokoredu"
+
+	// Time allowed to read the next pong message from the peer.
+	PongWait = 60 * time.Second
+	// Send pings to peer with this period. Must be less than pongWait.
+	PingPeriod = (PongWait * 9) / 10
+	// Time allowed to write a message to the peer.
+	WriteWait = 10 * time.Second
 )
 
 var LetterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")

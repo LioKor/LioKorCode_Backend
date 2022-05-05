@@ -2,7 +2,9 @@ package http
 
 import (
 	"encoding/json"
+	"liokoredu/pkg/constants"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -27,9 +29,13 @@ func NewConnection(session *Session, ws *websocket.Conn) *Connection {
 	return &Connection{Session: session, Ws: ws}
 }
 
+func (c *Connection) write(mt int, payload []byte) error {
+	c.Ws.SetWriteDeadline(time.Now().Add(constants.WriteWait))
+	return c.Ws.WriteMessage(mt, payload)
+}
+
 func (c *Connection) Handle() error {
 	s := c.Session
-	log.Println("got session")
 
 	err := c.Send(&Event{"doc", map[string]interface{}{
 		"document": s.Document,
@@ -40,35 +46,54 @@ func (c *Connection) Handle() error {
 		log.Println(err)
 		return err
 	}
-	log.Println("sent")
 
 	s.RegisterConnection(c)
-	log.Println("registered connection")
+	go c.pingPong()
 
 	for {
 		e, err := c.ReadEvent()
 		if err != nil {
 			break
 		}
-
 		s.EventChan <- ConnEvent{c, e}
 	}
 
-	s.UnregisterConnection(c)
 	c.Broadcast(&Event{"quit", map[string]interface{}{
 		"client_id": c.ID,
 		"username":  s.Clients[c.ID].Name,
 	}})
+	s.UnregisterConnection(c)
 	return nil
 }
 
+func (c *Connection) pingPong() {
+	ticker := time.NewTicker(constants.PingPeriod)
+	defer func() {
+		ticker.Stop()
+	}()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
+				c.Broadcast(&Event{"quit", map[string]interface{}{
+					"client_id": c.ID,
+					"username":  c.Session.Clients[c.ID].Name,
+				}})
+				c.Session.UnregisterConnection(c)
+				return
+			}
+		}
+	}
+
+}
+
 func (c *Connection) ReadEvent() (*Event, error) {
+	c.Ws.SetPongHandler(func(string) error { c.Ws.SetReadDeadline(time.Now().Add(constants.PongWait)); return nil })
 	_, msg, err := c.Ws.ReadMessage()
-	log.Println(err)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("msg", string(msg[:]))
 	m := &Event{}
 	if err = json.Unmarshal(msg, &m); err != nil {
 		return nil, err
@@ -77,7 +102,7 @@ func (c *Connection) ReadEvent() (*Event, error) {
 }
 
 func (c *Connection) Send(msg *Event) error {
-	log.Println(msg)
+	c.Ws.SetWriteDeadline(time.Now().Add(constants.WriteWait))
 	j, err := json.Marshal(msg)
 	if err != nil {
 		return err
