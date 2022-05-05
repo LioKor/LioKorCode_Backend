@@ -1,7 +1,6 @@
 package http
 
 import (
-	"log"
 	"strconv"
 	"sync"
 
@@ -55,30 +54,24 @@ func (s *Session) HandleEvents() {
 		if !ok {
 			return
 		}
-		log.Println("aaa")
 
 		c := e.Conn
-		log.Println(e.Name)
+
 		switch e.Name {
 		case "join":
 			data, ok := e.Data.(map[string]interface{})
-			log.Println(data, ok)
 			if !ok {
 				break
 			}
 			username, ok := data["username"].(string)
-			log.Println(username, ok)
 			if !ok || username == "" {
-				log.Println(username)
 				break
 			}
 
 			s.SetName(c.ID, username)
-			log.Println(c.ID)
 
 			err := c.Send(&Event{"registered", c.ID})
 			if err != nil {
-				log.Println(username)
 				break
 			}
 			c.Broadcast(&Event{"join", map[string]interface{}{
@@ -149,6 +142,11 @@ func (s *Session) HandleEvents() {
 			}
 			s.SetSelection(c.ID, sel)
 			c.Broadcast(&Event{"sel", []interface{}{c.ID, sel.Marshal()}})
+		case "ping":
+			err := c.Send(&Event{"pong", nil})
+			if err != nil {
+				break
+			}
 		}
 	}
 }

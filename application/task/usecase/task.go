@@ -59,6 +59,40 @@ func (tuc *TaskUseCase) GetTasks(uid uint64, page int) (models.ShortTasks, error
 	return tsksArr, nil
 }
 
+func (tuc *TaskUseCase) GetSolvedTasks(uid uint64, page int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.GetSolvedTasks(uid, page)
+	if err != nil {
+		return models.ShortTasks{}, err
+	}
+	if uid == 0 {
+		return *tsks, nil
+	}
+	tsksArr := models.ShortTasks{}
+	for _, tsk := range *tsks {
+		tsk.IsCleared = true
+		tsksArr = append(tsksArr, tsk)
+	}
+
+	return tsksArr, nil
+}
+
+func (tuc *TaskUseCase) GetUnsolvedTasks(uid uint64, page int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.GetUnsolvedTasks(uid, page)
+	if err != nil {
+		return models.ShortTasks{}, err
+	}
+	if uid == 0 {
+		return *tsks, nil
+	}
+	tsksArr := models.ShortTasks{}
+	for _, tsk := range *tsks {
+		tsk.IsCleared = false
+		tsksArr = append(tsksArr, tsk)
+	}
+
+	return tsksArr, nil
+}
+
 func (uc *TaskUseCase) GetUserTasks(uid uint64, page int) (models.ShortTasks, error) {
 	tsks, err := uc.repo.GetUserTasks(uid, page)
 	if err != nil {
@@ -68,7 +102,6 @@ func (uc *TaskUseCase) GetUserTasks(uid uint64, page int) (models.ShortTasks, er
 	return *tsks, nil
 }
 
-// CreateTask implements task.UseCase
 func (uc *TaskUseCase) CreateTask(t *models.TaskNew) (uint64, error) {
 	return uc.repo.CreateTask(t.ConvertNewTaskToTaskSQL())
 }

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"liokoredu/application/microservices/redactor/client"
 	"liokoredu/application/models"
 	"liokoredu/application/server/middleware"
 	"liokoredu/pkg/constants"
@@ -15,7 +14,6 @@ import (
 )
 
 type RedactorHandler struct {
-	rpcRedactor *client.RedactorClient
 }
 
 var upgrader = websocket.Upgrader{
@@ -50,20 +48,6 @@ func (rh *RedactorHandler) CreateConnection(c echo.Context) error {
 	log.Println(sln)
 
 	roomId, _ := createRoom(sln.SourceCode)
-	//serveWs(c, session)
-
-	/*
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-	*/
-
-	//if _, err := easyjson.MarshalToWriter(&models.IdValue{Id: roomId}, c.Response().Writer); err != nil {
-	//	log.Println(err)
-	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	//}
 
 	return c.JSON(http.StatusOK, &models.IdValue{Id: roomId})
 }
@@ -80,27 +64,11 @@ func (rh *RedactorHandler) ConnectToRoom(c echo.Context) error {
 	}
 	serveWs(c, s)
 
-	//uid := c.Get(constants.UserIdKey).(uint64)
-	/*
-
-		id, err, code := rh.rpcRedactor.CreateConnection(uid)
-		if err != nil {
-			log.Println(id, err, code)
-			return err
-		}
-
-		if _, err = easyjson.MarshalToWriter(&models.IdValue{Id: id}, c.Response().Writer); err != nil {
-			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-	*/
-
-	return c.JSON(http.StatusOK, nil)
+	return nil
 }
 
 func createRoom(code string) (string, *Session) {
 	roomId := generators.RandStringRunes(constants.WSLength)
-	log.Println("created room:", roomId)
 	session := NewSession(code)
 	go session.HandleEvents()
 	subscriptions[roomId] = session
@@ -108,15 +76,13 @@ func createRoom(code string) (string, *Session) {
 }
 
 func getRoom(id string) *Session {
-	log.Println("got room:", id)
 	return subscriptions[id]
 }
 
 func serveWs(c echo.Context, s *Session) {
-	log.Println("ddd")
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("error serving ws:", err)
 		if _, ok := err.(websocket.HandshakeError); !ok {
 			log.Println(err)
 		}

@@ -3,22 +3,58 @@ package repository
 import (
 	"context"
 	"fmt"
-	"liokoredu/application/models"
-	"liokoredu/application/task"
-	"liokoredu/pkg/constants"
 	"log"
 	"net/http"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
+
+	"liokoredu/application/models"
+	"liokoredu/application/task"
+	"liokoredu/pkg/constants"
 )
 
 type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
-// IsCleared implements task.Repository
+func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
+	err := pgxscan.Select(context.Background(), td.pool, &t,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON t.creator = u.id
+		JOIN tasks_done td ON td.uid = $1 and td.task_id = t.id
+		WHERE is_private = false
+		ORDER BY t.id DESC LIMIT $2 OFFSET $3`,
+		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+	if err != nil {
+		log.Println("task repository: getSolvedTasks: error getting tasks", err)
+		return &models.ShortTasks{}, err
+	}
+
+	return &t, nil
+}
+
+func (td *TaskDatabase) GetUnsolvedTasks(uid uint64, page int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
+	err := pgxscan.Select(context.Background(), td.pool, &t,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON t.creator = u.id
+		JOIN tasks_done td ON td.uid = $1 and td.task_id != t.id
+		WHERE is_private = false
+		ORDER BY t.id DESC LIMIT $2 OFFSET $3`,
+		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+	if err != nil {
+		log.Println("task repository: getSolvedTasks: error getting tasks", err)
+		return &models.ShortTasks{}, err
+	}
+
+	return &t, nil
+}
+
 func (td *TaskDatabase) IsCleared(taskId uint64, uid uint64) (bool, error) {
 	var id []uint64
 	err := pgxscan.Select(context.Background(), td.pool, &id,
@@ -36,7 +72,6 @@ func (td *TaskDatabase) IsCleared(taskId uint64, uid uint64) (bool, error) {
 	return true, nil
 }
 
-// MarkTaskDone implements task.Repository
 func (td *TaskDatabase) MarkTaskDone(id uint64, uid uint64) error {
 	_, err := td.pool.Exec(context.Background(),
 		`INSERT INTO tasks_done (uid, task_id) VALUES ($1, $2);`, uid, id)
@@ -49,7 +84,6 @@ func (td *TaskDatabase) MarkTaskDone(id uint64, uid uint64) error {
 	return nil
 }
 
-// UpdateTask implements task.Repository
 func (td *TaskDatabase) UpdateTask(t *models.TaskSQL) error {
 	resp, err := td.pool.Exec(context.Background(),
 		`UPDATE tasks set title = $1, description = $2, hints = $3, 
@@ -69,7 +103,6 @@ func (td *TaskDatabase) UpdateTask(t *models.TaskSQL) error {
 	return nil
 }
 
-// DeleteTask implements task.Repository
 func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 	resp, err := td.pool.Exec(context.Background(),
 		`DELETE from tasks WHERE id = $1 AND creator = $2`,
@@ -88,7 +121,6 @@ func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 	return nil
 }
 
-// GetTasks implements task.Repository
 func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,

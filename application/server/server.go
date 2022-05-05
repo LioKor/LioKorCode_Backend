@@ -75,7 +75,7 @@ func NewServer() *Server {
 
 	uhttp.CreateUserHandler(e, userUC, a)
 	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
-	thttp.CreateTaskHandler(e, taskUC, userUC)
+	thttp.CreateTaskHandler(e, taskUC, userUC, a)
 	rhttp.CreateRedactorHandler(e, a)
 
 	server.e = e
