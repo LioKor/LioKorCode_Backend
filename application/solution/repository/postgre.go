@@ -12,6 +12,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/georgysavva/scany/pgxscan"
@@ -43,7 +45,7 @@ func (sd *SolutionDatabase) GetSolution(id uint64, taskId uint64, uid uint64) (m
 	}
 
 	base, _ := os.Getwd()
-	sourceCode, _ := ioutil.ReadFile(base + constants.SolutionsDir + sln[0].SourceCode)
+	sourceCode, _ := ioutil.ReadFile(filepath.ToSlash(base + constants.SolutionsDir + sln[0].SourceCode))
 	sln[0].SourceCode = string(sourceCode)
 
 	return sln[0], nil
@@ -81,7 +83,7 @@ func (sd *SolutionDatabase) DeleteSolution(id uint64, uid uint64) error {
 	}
 
 	base, _ := os.Getwd()
-	_ = os.Remove(base + constants.SolutionsDir + filename[0])
+	_ = os.Remove(filepath.ToSlash(base + constants.SolutionsDir + filename[0]))
 
 	return nil
 }
@@ -104,7 +106,7 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 
 	base, _ := os.Getwd()
 	for _, elem := range sln {
-		sourceCode, _ := ioutil.ReadFile(base + constants.SolutionsDir + elem.SourceCode)
+		sourceCode, _ := ioutil.ReadFile(filepath.ToSlash(base + constants.SolutionsDir + elem.SourceCode))
 		elem.SourceCode = string(sourceCode)
 	}
 
@@ -112,6 +114,9 @@ func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.Solu
 }
 
 func (sd *SolutionDatabase) UpdateSolution(id uint64, upd *models.SolutionUpdate) error {
+	// PostgreSQL unable to store \x00 in string field
+	upd.CheckMessage = strings.Replace(upd.CheckMessage, "\x00", "", -1)
+
 	_, err := sd.pool.Exec(context.Background(),
 		`UPDATE solutions SET check_result = $1, tests_passed = $2, check_message = $3,
 		check_time = $4, compile_time = $5, checked_date_time = $6 WHERE id = $7`,
@@ -129,14 +134,14 @@ func (sd *SolutionDatabase) InsertSolution(taskId uint64, uid uint64, code map[s
 	testsTotal int, receivedTime time.Time) (uint64, error) {
 	var id uint64
 
-	filename := time.Now().Format("2006-01-02T15:04:05") +
+	filename := time.Now().Format("2006-01-02T15-04-05") +
 		generators.RandStringRunes(constants.PrivateLength)
 
 	b, _ := json.Marshal(code)
 	data := []byte(b)
 
 	base, _ := os.Getwd()
-	file, err := os.Create(base + constants.SolutionsDir + filename)
+	file, err := os.Create(filepath.ToSlash(base + constants.SolutionsDir + filename))
 	if err != nil {
 		log.Println(err)
 	}
