@@ -27,8 +27,10 @@ func CreateTaskHandler(e *echo.Echo,
 		uuc: uuc,
 	}
 	e.GET("/api/v1/tasks/:id", taskHandler.getTask)
+
 	e.POST("/api/v1/tasks", taskHandler.createTask, a.GetSession)
 	e.GET("/api/v1/tasks", taskHandler.getTasks)
+	e.GET("/api/v1/tasks/search", taskHandler.findTasks)
 	e.GET("/api/v1/tasks/solved", taskHandler.getSolvedTasks, a.GetSession)
 	e.GET("/api/v1/tasks/unsolved", taskHandler.getUnsolvedTasks, a.GetSession)
 	e.GET("/api/v1/tasks/user", taskHandler.getUserTasks, a.GetSession)
@@ -107,6 +109,50 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 
 	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
 		log.Println("task handler: getTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (th *TaskHandler) findTasks(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	str := c.QueryParam("find")
+	if str == "" {
+		return c.JSON(200, models.ShortTasks{})
+	}
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	uid := uint64(0)
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: getTasks: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		uid = 0
+	} else {
+		uid, err = th.uuc.CheckSession(cookie.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	tsks, err := th.uc.FindTasks(str, uid, p)
+	if err != nil {
+		return err
+	}
+
+	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
+		log.Println("task handler: findTasks: error marshaling answer to writer", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 

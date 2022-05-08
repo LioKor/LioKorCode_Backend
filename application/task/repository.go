@@ -13,4 +13,5 @@ type Repository interface {
 	DeleteTask(id uint64, uid uint64) error
 	UpdateTask(t *models.TaskSQL) error
 	MarkTaskDone(id uint64, uid uint64) error
+	FindTasks(str string, page int) (*models.ShortTasks, error)
 }

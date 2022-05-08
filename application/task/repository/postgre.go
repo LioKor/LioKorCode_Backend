@@ -19,6 +19,26 @@ type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
+func (td *TaskDatabase) FindTasks(str string, page int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
+	err := pgxscan.Select(context.Background(), td.pool, &t,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')
+			ORDER BY id DESC 
+			LIMIT $2
+			OFFSET $3`,
+		str, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+	if err != nil {
+		log.Println("task repository: findTasks: error getting tasks", err)
+		return &models.ShortTasks{}, err
+	}
+
+	return &t, nil
+}
+
 func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,

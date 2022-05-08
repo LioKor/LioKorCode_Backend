@@ -13,4 +13,5 @@ type UseCase interface {
 	DeleteTask(id uint64, uid uint64) error
 	UpdateTask(id uint64, t *models.TaskNew) error
 	MarkTaskDone(id uint64, uid uint64) error
+	FindTasks(str string, uid uint64, page int) (models.ShortTasks, error)
 }

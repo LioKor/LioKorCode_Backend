@@ -9,12 +9,10 @@ type TaskUseCase struct {
 	repo task.Repository
 }
 
-// IsCleared implements task.UseCase
 func (tuc *TaskUseCase) IsCleared(taskId uint64, uid uint64) (bool, error) {
 	return tuc.repo.IsCleared(taskId, uid)
 }
 
-// MarkTaskDone implements task.UseCase
 func (tuc *TaskUseCase) MarkTaskDone(id uint64, uid uint64) error {
 	res, err := tuc.repo.IsCleared(id, uid)
 	if err != nil {
@@ -26,16 +24,35 @@ func (tuc *TaskUseCase) MarkTaskDone(id uint64, uid uint64) error {
 	return tuc.repo.MarkTaskDone(id, uid)
 }
 
-// UpdateTask implements task.UseCase
 func (tuc *TaskUseCase) UpdateTask(id uint64, t *models.TaskNew) error {
 	tsk := t.ConvertNewTaskToTaskSQL()
 	tsk.Id = id
 	return tuc.repo.UpdateTask(tsk)
 }
 
-// DeleteTask implements task.UseCase
 func (tuc *TaskUseCase) DeleteTask(id uint64, uid uint64) error {
 	return tuc.repo.DeleteTask(id, uid)
+}
+
+func (tuc *TaskUseCase) FindTasks(str string, uid uint64, page int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.FindTasks(str, page)
+	if err != nil {
+		return models.ShortTasks{}, err
+	}
+	if uid == 0 {
+		return *tsks, nil
+	}
+	tsksArr := models.ShortTasks{}
+	for _, tsk := range *tsks {
+		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
+		if err != nil {
+			return models.ShortTasks{}, err
+		}
+		tsk.IsCleared = isDone
+		tsksArr = append(tsksArr, tsk)
+	}
+
+	return tsksArr, nil
 }
 
 func (tuc *TaskUseCase) GetTasks(uid uint64, page int) (models.ShortTasks, error) {
