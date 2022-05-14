@@ -12,14 +12,13 @@ import (
 
 	"liokoredu/application/models"
 	"liokoredu/application/task"
-	"liokoredu/pkg/constants"
 )
 
 type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
-func (td *TaskDatabase) FindTasks(str string, page int) (*models.ShortTasks, error) {
+func (td *TaskDatabase) FindTasks(str string, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
@@ -30,7 +29,7 @@ func (td *TaskDatabase) FindTasks(str string, page int) (*models.ShortTasks, err
 			ORDER BY id DESC 
 			LIMIT $2
 			OFFSET $3`,
-		str, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		str, count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: findTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err
@@ -39,7 +38,7 @@ func (td *TaskDatabase) FindTasks(str string, page int) (*models.ShortTasks, err
 	return &t, nil
 }
 
-func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int) (*models.ShortTasks, error) {
+func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
@@ -48,7 +47,7 @@ func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int) (*models.ShortTasks
 		JOIN tasks_done td ON td.uid = $1 and td.task_id = t.id
 		WHERE is_private = false
 		ORDER BY t.id DESC LIMIT $2 OFFSET $3`,
-		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		uid, count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: getSolvedTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err
@@ -57,7 +56,7 @@ func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int) (*models.ShortTasks
 	return &t, nil
 }
 
-func (td *TaskDatabase) GetUnsolvedTasks(uid uint64, page int) (*models.ShortTasks, error) {
+func (td *TaskDatabase) GetUnsolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
@@ -66,7 +65,7 @@ func (td *TaskDatabase) GetUnsolvedTasks(uid uint64, page int) (*models.ShortTas
 		JOIN tasks_done td ON td.uid = $1 and td.task_id != t.id
 		WHERE is_private = false
 		ORDER BY t.id DESC LIMIT $2 OFFSET $3`,
-		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		uid, count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: getSolvedTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err
@@ -141,7 +140,7 @@ func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 	return nil
 }
 
-func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
+func (td *TaskDatabase) GetTasks(page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
@@ -151,7 +150,7 @@ func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 			ORDER BY id DESC 
 			LIMIT $1 
 			OFFSET $2`,
-		constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err
@@ -160,7 +159,7 @@ func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 	return &t, nil
 }
 
-func (td *TaskDatabase) GetUserTasks(uid uint64, page int) (*models.ShortTasks, error) {
+func (td *TaskDatabase) GetUserTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
 		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username AS creator
@@ -170,7 +169,7 @@ func (td *TaskDatabase) GetUserTasks(uid uint64, page int) (*models.ShortTasks, 
 			ORDER BY id DESC 
 			LIMIT $2 
 			OFFSET $3`,
-		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		uid, count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err

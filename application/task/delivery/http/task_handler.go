@@ -85,6 +85,12 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 		p = 1
 	}
 
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
 	uid := uint64(0)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
@@ -102,7 +108,7 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 		}
 	}
 
-	tsks, err := th.uc.GetTasks(uid, p)
+	tsks, err := th.uc.GetTasks(uid, p, cc)
 	if err != nil {
 		return err
 	}
@@ -129,6 +135,12 @@ func (th *TaskHandler) findTasks(c echo.Context) error {
 		p = 1
 	}
 
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
 	uid := uint64(0)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
@@ -146,7 +158,7 @@ func (th *TaskHandler) findTasks(c echo.Context) error {
 		}
 	}
 
-	tsks, err := th.uc.FindTasks(str, uid, p)
+	tsks, err := th.uc.FindTasks(str, uid, p, cc)
 	if err != nil {
 		return err
 	}
@@ -169,9 +181,15 @@ func (th *TaskHandler) getSolvedTasks(c echo.Context) error {
 		p = 1
 	}
 
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
 	uid := c.Get(constants.UserIdKey).(uint64)
 
-	tsks, err := th.uc.GetSolvedTasks(uid, p)
+	tsks, err := th.uc.GetSolvedTasks(uid, p, cc)
 	if err != nil {
 		return err
 	}
@@ -194,9 +212,15 @@ func (th *TaskHandler) getUnsolvedTasks(c echo.Context) error {
 		p = 1
 	}
 
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
 	uid := c.Get(constants.UserIdKey).(uint64)
 
-	tsks, err := th.uc.GetUnsolvedTasks(uid, p)
+	tsks, err := th.uc.GetUnsolvedTasks(uid, p, cc)
 	if err != nil {
 		return err
 	}
@@ -219,9 +243,15 @@ func (th *TaskHandler) getUserTasks(c echo.Context) error {
 		p = 1
 	}
 
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
 	uid := c.Get(constants.UserIdKey).(uint64)
 
-	tsks, err := th.uc.GetUserTasks(uid, p)
+	tsks, err := th.uc.GetUserTasks(uid, p, cc)
 	if err != nil {
 		return err
 	}

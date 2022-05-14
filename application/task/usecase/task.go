@@ -34,8 +34,8 @@ func (tuc *TaskUseCase) DeleteTask(id uint64, uid uint64) error {
 	return tuc.repo.DeleteTask(id, uid)
 }
 
-func (tuc *TaskUseCase) FindTasks(str string, uid uint64, page int) (models.ShortTasks, error) {
-	tsks, err := tuc.repo.FindTasks(str, page)
+func (tuc *TaskUseCase) FindTasks(str string, uid uint64, page int, count int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.FindTasks(str, page, count)
 	if err != nil {
 		return models.ShortTasks{}, err
 	}
@@ -55,8 +55,8 @@ func (tuc *TaskUseCase) FindTasks(str string, uid uint64, page int) (models.Shor
 	return tsksArr, nil
 }
 
-func (tuc *TaskUseCase) GetTasks(uid uint64, page int) (models.ShortTasks, error) {
-	tsks, err := tuc.repo.GetTasks(page)
+func (tuc *TaskUseCase) GetTasks(uid uint64, page int, count int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.GetTasks(page, count)
 	if err != nil {
 		return models.ShortTasks{}, err
 	}
@@ -76,8 +76,8 @@ func (tuc *TaskUseCase) GetTasks(uid uint64, page int) (models.ShortTasks, error
 	return tsksArr, nil
 }
 
-func (tuc *TaskUseCase) GetSolvedTasks(uid uint64, page int) (models.ShortTasks, error) {
-	tsks, err := tuc.repo.GetSolvedTasks(uid, page)
+func (tuc *TaskUseCase) GetSolvedTasks(uid uint64, page int, count int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.GetSolvedTasks(uid, page, count)
 	if err != nil {
 		return models.ShortTasks{}, err
 	}
@@ -93,8 +93,8 @@ func (tuc *TaskUseCase) GetSolvedTasks(uid uint64, page int) (models.ShortTasks,
 	return tsksArr, nil
 }
 
-func (tuc *TaskUseCase) GetUnsolvedTasks(uid uint64, page int) (models.ShortTasks, error) {
-	tsks, err := tuc.repo.GetUnsolvedTasks(uid, page)
+func (tuc *TaskUseCase) GetUnsolvedTasks(uid uint64, page int, count int) (models.ShortTasks, error) {
+	tsks, err := tuc.repo.GetUnsolvedTasks(uid, page, count)
 	if err != nil {
 		return models.ShortTasks{}, err
 	}
@@ -110,8 +110,8 @@ func (tuc *TaskUseCase) GetUnsolvedTasks(uid uint64, page int) (models.ShortTask
 	return tsksArr, nil
 }
 
-func (uc *TaskUseCase) GetUserTasks(uid uint64, page int) (models.ShortTasks, error) {
-	tsks, err := uc.repo.GetUserTasks(uid, page)
+func (uc *TaskUseCase) GetUserTasks(uid uint64, page int, count int) (models.ShortTasks, error) {
+	tsks, err := uc.repo.GetUserTasks(uid, page, count)
 	if err != nil {
 		return models.ShortTasks{}, err
 	}

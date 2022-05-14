@@ -48,7 +48,7 @@ func (c *Connection) Handle() error {
 	}
 
 	s.RegisterConnection(c)
-	go c.pingPong()
+	//go c.pingPong()
 
 	for {
 		e, err := c.ReadEvent()

@@ -7,6 +7,7 @@ const (
 	UserIdKey           = "uid"
 	CodeKey             = "code"
 	PageKey             = "page"
+	CountKey            = "count"
 	TaskId              = "taskId"
 	SolutionId          = "solutionId"
 	TasksPerPage        = 100
