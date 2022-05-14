@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -18,6 +19,24 @@ type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
+// GetPages implements task.Repository
+func (td *TaskDatabase) GetPages() (int, error) {
+	n := []int{}
+	err := pgxscan.Select(context.Background(), td.pool, &n,
+		`select count (*) from tasks;`)
+
+	if err != nil {
+		log.Println("task repository: GetPages: error getting num:", err)
+		return 0, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if len(n) == 0 {
+		return 0, nil
+	}
+
+	return n[0], nil
+}
+
 func (td *TaskDatabase) FindTasks(str string, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
@@ -29,7 +48,7 @@ func (td *TaskDatabase) FindTasks(str string, page int, count int) (*models.Shor
 			ORDER BY id DESC 
 			LIMIT $2
 			OFFSET $3`,
-		str, count, (page-1)*count)
+		strings.ToLower(str), count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: findTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err

@@ -4,6 +4,7 @@ import "liokoredu/application/models"
 
 type Repository interface {
 	GetTask(id uint64) (*models.TaskSQL, error)
+	GetPages() (int, error)
 	GetTasks(page int, count int) (*models.ShortTasks, error)
 	GetSolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error)
 	GetUnsolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error)

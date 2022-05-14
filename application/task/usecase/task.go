@@ -146,3 +146,14 @@ func (uc TaskUseCase) GetTask(id uint64, uid uint64, forCheck bool) (*models.Tas
 	tsk := t.ConvertToTask(isCreator, isCleared)
 	return tsk, nil
 }
+
+func (uc TaskUseCase) GetPages(count int) (int, error) {
+	n, err := uc.repo.GetPages()
+	if err != nil {
+		return 0, err
+	}
+	if n%count == 0 {
+		return n / count, nil
+	}
+	return n/count + 1, nil
+}

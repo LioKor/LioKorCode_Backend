@@ -31,6 +31,7 @@ func CreateTaskHandler(e *echo.Echo,
 	e.POST("/api/v1/tasks", taskHandler.createTask, a.GetSession)
 	e.GET("/api/v1/tasks", taskHandler.getTasks)
 	e.GET("/api/v1/tasks/search", taskHandler.findTasks)
+	e.GET("/api/v1/tasks/pages", taskHandler.getPages)
 	e.GET("/api/v1/tasks/solved", taskHandler.getSolvedTasks, a.GetSession)
 	e.GET("/api/v1/tasks/unsolved", taskHandler.getUnsolvedTasks, a.GetSession)
 	e.GET("/api/v1/tasks/user", taskHandler.getUserTasks, a.GetSession)
@@ -73,6 +74,23 @@ func (th *TaskHandler) getTask(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func (th *TaskHandler) getPages(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	n, err := th.uc.GetPages(cc)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, n)
 }
 
 func (th *TaskHandler) getTasks(c echo.Context) error {

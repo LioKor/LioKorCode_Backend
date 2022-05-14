@@ -5,6 +5,7 @@ import "liokoredu/application/models"
 type UseCase interface {
 	GetTask(id uint64, uid uint64, forCheck bool) (*models.Task, error)
 	GetTasks(uid uint64, page int, count int) (models.ShortTasks, error)
+	GetPages(count int) (int, error)
 	GetSolvedTasks(uid uint64, page int, count int) (models.ShortTasks, error)
 	GetUnsolvedTasks(uid uint64, page int, count int) (models.ShortTasks, error)
 	IsCleared(taskId uint64, uid uint64) (bool, error)
