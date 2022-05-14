@@ -69,6 +69,7 @@ func createRoom(code string) (string, *Session) {
 	roomId := generators.RandStringRunes(constants.WSLength)
 	session := NewSession(code)
 	go session.HandleEvents()
+	go session.PingPong()
 	subscriptions[roomId] = session
 	return roomId, session
 }

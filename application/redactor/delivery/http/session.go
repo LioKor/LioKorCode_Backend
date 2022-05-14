@@ -1,9 +1,13 @@
 package http
 
 import (
+	"liokoredu/pkg/constants"
+	"log"
 	"strconv"
 	"sync"
+	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/nitrous-io/ot.go/ot/operation"
 	"github.com/nitrous-io/ot.go/ot/selection"
 	"github.com/nitrous-io/ot.go/ot/session"
@@ -45,6 +49,31 @@ func (s *Session) UnregisterConnection(c *Connection) {
 		s.RemoveClient(c.ID)
 	}
 	s.lock.Unlock()
+}
+
+func (s *Session) PingPong() {
+	ticker := time.NewTicker(constants.PingPeriod)
+	defer func() {
+		ticker.Stop()
+	}()
+
+	for {
+		select {
+		case <-ticker.C:
+			log.Println("ping")
+			for c := range s.Connections {
+				if err := c.write(websocket.PingMessage, []byte{}); err != nil {
+					c.Broadcast(&Event{"quit", map[string]interface{}{
+						"client_id": c.ID,
+						"username":  c.Session.Clients[c.ID].Name,
+					}})
+					c.Session.UnregisterConnection(c)
+					return
+				}
+			}
+		}
+
+	}
 }
 
 func (s *Session) HandleEvents() {

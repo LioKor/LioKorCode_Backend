@@ -28,7 +28,7 @@ const (
 	SignKey             = "liokoredu"
 
 	// Time allowed to read the next pong message from the peer.
-	PongWait = 60 * time.Second
+	PongWait = 10 * time.Second
 	// Send pings to peer with this period. Must be less than pongWait.
 	PingPeriod = (PongWait * 9) / 10
 	// Time allowed to write a message to the peer.
