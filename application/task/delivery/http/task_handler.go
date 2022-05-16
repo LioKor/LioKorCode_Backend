@@ -31,6 +31,7 @@ func CreateTaskHandler(e *echo.Echo,
 	e.POST("/api/v1/tasks", taskHandler.createTask, a.GetSession)
 	e.GET("/api/v1/tasks", taskHandler.getTasks)
 	e.GET("/api/v1/tasks/search", taskHandler.findTasks)
+	e.GET("/api/v1/tasks/fullsearch", taskHandler.findTasksFull)
 	e.GET("/api/v1/tasks/pages", taskHandler.getPages)
 	e.GET("/api/v1/tasks/solved", taskHandler.getSolvedTasks, a.GetSession)
 	e.GET("/api/v1/tasks/unsolved", taskHandler.getUnsolvedTasks, a.GetSession)
@@ -90,7 +91,13 @@ func (th *TaskHandler) getPages(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, n)
+
+	if _, err = easyjson.MarshalToWriter(&models.Pases{Count: n}, c.Response().Writer); err != nil {
+		log.Println("task handler: getTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }
 
 func (th *TaskHandler) getTasks(c echo.Context) error {
@@ -182,6 +189,84 @@ func (th *TaskHandler) findTasks(c echo.Context) error {
 	}
 
 	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
+		log.Println("task handler: findTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (th *TaskHandler) findTasksFull(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	str := c.QueryParam("find")
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := uint64(0)
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: getTasks: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		uid = 0
+	} else {
+		uid, err = th.uuc.CheckSession(cookie.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	solved := c.QueryParams().Get("solved")
+	useSolved := false
+	boolSolved := false
+	if solved != "" {
+		useSolved = true
+		if solved == "true" {
+			boolSolved = true
+		} else if solved == "false" {
+			boolSolved = false
+		} else {
+			return echo.NewHTTPError(400, "Bad parameters")
+		}
+	}
+
+	mine := c.QueryParams().Get("mine")
+	useMine := false
+	boolMine := false
+	if mine != "" {
+		useMine = true
+		if mine == "true" {
+			boolMine = true
+		} else {
+			return echo.NewHTTPError(400, "Bad parameters")
+		}
+	}
+	if (useMine || useSolved) && uid == 0 {
+		return echo.NewHTTPError(401, "Cannot find user's tasks - not authenticated")
+	}
+
+	tsks, num, err := th.uc.FindTasksFull(str, useSolved, boolSolved, useMine, boolMine, uid, p, cc)
+	if err != nil {
+		return err
+	}
+
+	tsksNum := models.TasksWithNum{Tsks: *tsks, Num: num}
+
+	if _, err = easyjson.MarshalToWriter(tsksNum, c.Response().Writer); err != nil {
 		log.Println("task handler: findTasks: error marshaling answer to writer", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

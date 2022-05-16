@@ -9,6 +9,28 @@ type TaskUseCase struct {
 	repo task.Repository
 }
 
+// FindTasksFull implements task.UseCase
+func (tuc *TaskUseCase) FindTasksFull(str string, useSolved bool, solved bool, useMine bool, mine bool, uid uint64, page int, count int) (*models.ShortTasks, int, error) {
+	tsks, num, err := tuc.repo.FindTasksFull(str, useSolved, solved, useMine, mine, uid, page, count)
+	if err != nil {
+		return &models.ShortTasks{}, num, err
+	}
+	if uid == 0 {
+		return tsks, num, nil
+	}
+	tsksArr := models.ShortTasks{}
+	for _, tsk := range *tsks {
+		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
+		if err != nil {
+			return &models.ShortTasks{}, num, err
+		}
+		tsk.IsCleared = isDone
+		tsksArr = append(tsksArr, tsk)
+	}
+
+	return &tsksArr, num, nil
+}
+
 func (tuc *TaskUseCase) IsCleared(taskId uint64, uid uint64) (bool, error) {
 	return tuc.repo.IsCleared(taskId, uid)
 }

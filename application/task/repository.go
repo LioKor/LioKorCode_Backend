@@ -15,4 +15,5 @@ type Repository interface {
 	UpdateTask(t *models.TaskSQL) error
 	MarkTaskDone(id uint64, uid uint64) error
 	FindTasks(str string, page int, count int) (*models.ShortTasks, error)
+	FindTasksFull(str string, useSolved bool, solved bool, useMine bool, mine bool, uid uint64, page int, count int) (*models.ShortTasks, int, error)
 }

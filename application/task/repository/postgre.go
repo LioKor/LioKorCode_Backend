@@ -19,7 +19,177 @@ type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
-// GetPages implements task.Repository
+func (td *TaskDatabase) FindTasksFull(str string, useSolved bool, solved bool, useMine bool, mine bool, uid uint64, page int, count int) (*models.ShortTasks, int, error) {
+	t := models.ShortTasks{}
+	switch {
+	case !useSolved && !useMine:
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')
+			ORDER BY id DESC 
+			LIMIT $2
+			OFFSET $3`,
+			strings.ToLower(str), count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: findTasksFull: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*) 
+			from tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')
+			LIMIT $2
+			OFFSET $3;`, strings.ToLower(str), count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+	case useSolved && !useMine:
+		s := "="
+		if !solved {
+			s = "!="
+		}
+
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON u.id = t.creator
+		JOIN tasks_done td ON td.uid = $1 and td.task_id`+s+` t.id
+		WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+		OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+		ORDER BY id DESC 
+		LIMIT $3
+		OFFSET $4;`,
+			uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: findTasksFull: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*)
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			JOIN tasks_done td ON td.uid = $1 and td.task_id `+s+` t.id
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $2 || '%'
+			OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+			LIMIT $3
+			OFFSET $4;`,
+			uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+
+	case !useSolved && useMine:
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username AS creator
+			FROM tasks t
+ 			JOIN users u ON u.id = t.creator
+			WHERE is_private = false AND t.creator = $1 and (LOWER(title) LIKE '%' || $2 || '%'
+			OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+			LIMIT $3 
+			OFFSET $4`,
+			uid, str, count, (page-1)*count)
+		if err != nil {
+			log.Println("task repository: getTasks: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*) 
+				FROM tasks t
+				JOIN users u ON u.id = t.creator
+				WHERE is_private = false AND t.creator = $1 and (LOWER(title) LIKE '%' || $2 || '%'
+				OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+				LIMIT $3 
+				OFFSET $4`,
+			uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+	case useSolved && useMine:
+		s := "="
+		if !solved {
+			s = "!="
+		}
+
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON u.id = t.creator
+		JOIN tasks_done td ON td.uid = $1 and td.task_id`+s+` t.id
+		WHERE is_private = false and t.creator = $2 (LOWER(title) LIKE '%' || $3 || '%'
+		OR LOWER(description) LIKE '%' || $3 || '%' OR to_char(t.id, '999') LIKE '%' || $3 || '%')
+		LIMIT $4
+		OFFSET $5;`,
+			uid, uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: findTasksFull: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*) 
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			JOIN tasks_done td ON td.uid = $1 and td.task_id `+s+` t.id
+			WHERE is_private = false and t.creator = $2 (LOWER(title) LIKE '%' || $3 || '%'
+			OR LOWER(description) LIKE '%' || $3 || '%' OR to_char(t.id, '999') LIKE '%' || $3 || '%')
+			LIMIT $4
+			OFFSET $5;`,
+			uid, uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+	}
+
+	return &models.ShortTasks{}, 0, nil
+}
+
 func (td *TaskDatabase) GetPages() (int, error) {
 	n := []int{}
 	err := pgxscan.Select(context.Background(), td.pool, &n,

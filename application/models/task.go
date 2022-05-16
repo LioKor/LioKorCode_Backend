@@ -31,6 +31,15 @@ type ShortTask struct {
 	CreatorId   uint64 `json:"creatorId"`
 }
 
+type Pases struct {
+	Count int `json:"count"`
+}
+
+type TasksWithNum struct {
+	Tsks ShortTasks
+	Num  int `json:"num"`
+}
+
 //easyjson:json
 type ShortTasks []ShortTask
 
