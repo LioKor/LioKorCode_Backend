@@ -10,25 +10,25 @@ type TaskUseCase struct {
 }
 
 // FindTasksFull implements task.UseCase
-func (tuc *TaskUseCase) FindTasksFull(str string, useSolved bool, solved bool, useMine bool, mine bool, uid uint64, page int, count int) (*models.ShortTasks, int, error) {
+func (tuc *TaskUseCase) FindTasksFull(str string, useSolved bool, solved bool, useMine bool, mine bool, uid uint64, page int, count int) (models.ShortTasks, int, error) {
 	tsks, num, err := tuc.repo.FindTasksFull(str, useSolved, solved, useMine, mine, uid, page, count)
 	if err != nil {
-		return &models.ShortTasks{}, num, err
+		return models.ShortTasks{}, num, err
 	}
 	if uid == 0 {
-		return tsks, num, nil
+		return *tsks, num, nil
 	}
 	tsksArr := models.ShortTasks{}
 	for _, tsk := range *tsks {
-		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
+		isDone, err := tuc.repo.IsCleared(tsk.Id, uid)
 		if err != nil {
-			return &models.ShortTasks{}, num, err
+			return models.ShortTasks{}, num, err
 		}
 		tsk.IsCleared = isDone
 		tsksArr = append(tsksArr, tsk)
 	}
 
-	return &tsksArr, num, nil
+	return tsksArr, num, nil
 }
 
 func (tuc *TaskUseCase) IsCleared(taskId uint64, uid uint64) (bool, error) {
@@ -66,7 +66,7 @@ func (tuc *TaskUseCase) FindTasks(str string, uid uint64, page int, count int) (
 	}
 	tsksArr := models.ShortTasks{}
 	for _, tsk := range *tsks {
-		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
+		isDone, err := tuc.repo.IsCleared(tsk.Id, uid)
 		if err != nil {
 			return models.ShortTasks{}, err
 		}
@@ -87,7 +87,7 @@ func (tuc *TaskUseCase) GetTasks(uid uint64, page int, count int) (models.ShortT
 	}
 	tsksArr := models.ShortTasks{}
 	for _, tsk := range *tsks {
-		isDone, err := tuc.repo.IsCleared(uid, tsk.Id)
+		isDone, err := tuc.repo.IsCleared(tsk.Id, uid)
 		if err != nil {
 			return models.ShortTasks{}, err
 		}

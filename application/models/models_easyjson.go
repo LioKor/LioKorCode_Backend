@@ -533,7 +533,7 @@ func easyjsonD2b7633eDecodeLiokoreduApplicationModels6(in *jlexer.Lexer, out *Ta
 			continue
 		}
 		switch key {
-		case "Tsks":
+		case "tasks":
 			(out.Tsks).UnmarshalEasyJSON(in)
 		case "num":
 			out.Num = int(in.Int())
@@ -552,7 +552,7 @@ func easyjsonD2b7633eEncodeLiokoreduApplicationModels6(out *jwriter.Writer, in T
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Tsks\":"
+		const prefix string = ",\"tasks\":"
 		out.RawString(prefix[1:])
 		(in.Tsks).MarshalEasyJSON(out)
 	}

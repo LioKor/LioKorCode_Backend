@@ -264,7 +264,7 @@ func (th *TaskHandler) findTasksFull(c echo.Context) error {
 		return err
 	}
 
-	tsksNum := models.TasksWithNum{Tsks: *tsks, Num: num}
+	tsksNum := models.TasksWithNum{Tsks: tsks, Num: num}
 
 	if _, err = easyjson.MarshalToWriter(tsksNum, c.Response().Writer); err != nil {
 		log.Println("task handler: findTasks: error marshaling answer to writer", err)

@@ -45,9 +45,8 @@ func (td *TaskDatabase) FindTasksFull(str string, useSolved bool, solved bool, u
 			from tasks t
 			JOIN users u ON u.id = t.creator
 			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
-			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')
-			LIMIT $2
-			OFFSET $3;`, strings.ToLower(str), count, (page-1)*count)
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')`,
+			strings.ToLower(str))
 
 		if err != nil {
 			log.Println("task repository: FindTasksFull: error getting num:", err)
@@ -90,9 +89,8 @@ func (td *TaskDatabase) FindTasksFull(str string, useSolved bool, solved bool, u
 			JOIN tasks_done td ON td.uid = $1 and td.task_id `+s+` t.id
 			WHERE is_private = false and (LOWER(title) LIKE '%' || $2 || '%'
 			OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
-			LIMIT $3
-			OFFSET $4;`,
-			uid, str, count, (page-1)*count)
+			;`,
+			uid, str)
 
 		if err != nil {
 			log.Println("task repository: FindTasksFull: error getting num:", err)
@@ -127,9 +125,8 @@ func (td *TaskDatabase) FindTasksFull(str string, useSolved bool, solved bool, u
 				JOIN users u ON u.id = t.creator
 				WHERE is_private = false AND t.creator = $1 and (LOWER(title) LIKE '%' || $2 || '%'
 				OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
-				LIMIT $3 
-				OFFSET $4`,
-			uid, str, count, (page-1)*count)
+				`,
+			uid, str)
 
 		if err != nil {
 			log.Println("task repository: FindTasksFull: error getting num:", err)
@@ -171,9 +168,8 @@ func (td *TaskDatabase) FindTasksFull(str string, useSolved bool, solved bool, u
 			JOIN tasks_done td ON td.uid = $1 and td.task_id `+s+` t.id
 			WHERE is_private = false and t.creator = $2 (LOWER(title) LIKE '%' || $3 || '%'
 			OR LOWER(description) LIKE '%' || $3 || '%' OR to_char(t.id, '999') LIKE '%' || $3 || '%')
-			LIMIT $4
-			OFFSET $5;`,
-			uid, uid, str, count, (page-1)*count)
+			;`,
+			uid, uid, str)
 
 		if err != nil {
 			log.Println("task repository: FindTasksFull: error getting num:", err)

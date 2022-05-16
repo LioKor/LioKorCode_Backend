@@ -36,8 +36,8 @@ type Pases struct {
 }
 
 type TasksWithNum struct {
-	Tsks ShortTasks
-	Num  int `json:"num"`
+	Tsks ShortTasks `json:"tasks"`
+	Num  int        `json:"num"`
 }
 
 //easyjson:json
