@@ -73,7 +73,7 @@ func (uh *UserHandler) updateUserAvatar(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, "Avatar changed successfully")
+	return nil
 }
 
 func (uh *UserHandler) createUser(c echo.Context) error {
