@@ -7,6 +7,7 @@ import (
 	"errors"
 	"image"
 	"image/jpeg"
+	_ "image/png"
 	"liokoredu/application/models"
 	"liokoredu/pkg/constants"
 	"log"
