@@ -7,7 +7,9 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
+	"github.com/petejkim/ot.go/ot"
 
+	"liokoredu/application/server/middleware"
 	slhttp "liokoredu/application/solution/delivery/http"
 	slrep "liokoredu/application/solution/repository"
 	sluc "liokoredu/application/solution/usecase"
@@ -17,6 +19,8 @@ import (
 	uhttp "liokoredu/application/user/delivery/http"
 	urep "liokoredu/application/user/repository"
 	uuc "liokoredu/application/user/usecase"
+
+	rhttp "liokoredu/application/redactor/delivery/http"
 	"liokoredu/pkg/constants"
 )
 
@@ -28,6 +32,7 @@ func NewServer() *Server {
 	var server Server
 
 	e := echo.New()
+	ot.TextEncoding = ot.TextEncodingTypeUTF16
 
 	pool, err := pgxpool.Connect(context.Background(),
 		"user=lk"+
@@ -61,14 +66,22 @@ func NewServer() *Server {
 	taskUC := tuc.NewTaskUseCase(taskRep)
 	solutionUC := sluc.NewSolutionUseCase(solutionRep, taskUC)
 
-	uhttp.CreateUserHandler(e, userUC)
+	a := middleware.NewAuth(userUC)
+
+	//rpcR, err := client.NewRedactorClient(constants.RedactorServicePort)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	uhttp.CreateUserHandler(e, userUC, a)
 	slhttp.CreateSolutionHandler(e, solutionUC, taskUC, userUC)
-	thttp.CreateTaskHandler(e, taskUC, userUC)
+	thttp.CreateTaskHandler(e, taskUC, userUC, a)
+	rhttp.CreateRedactorHandler(e, a)
 
 	server.e = e
 	return &server
 }
 
 func (s Server) ListenAndServe() {
-	s.e.Logger.Fatal(s.e.Start(":1323"))
+	s.e.Logger.Fatal(s.e.Start("127.0.0.1:9091"))
 }

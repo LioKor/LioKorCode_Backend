@@ -16,6 +16,9 @@ type Task struct {
 	Hints       string     `json:"hints"`
 	TestsAmount int        `json:"testsAmount"`
 	Tests       InputTests `json:"tests"`
+	Author      string     `json:"author"`
+	AuthorId    string     `json:"authorId"`
+	IsCleared   bool       `json:"isCleared"`
 }
 
 type ShortTask struct {
@@ -23,6 +26,18 @@ type ShortTask struct {
 	Title       string `json:"name"`
 	Description string `json:"description"`
 	TestAmount  int    `json:"testsAmount"`
+	IsCleared   bool   `json:"isCleared"`
+	Creator     string `json:"creator"`
+	CreatorId   uint64 `json:"creatorId"`
+}
+
+type Pases struct {
+	Count int `json:"count"`
+}
+
+type TasksWithNum struct {
+	Tsks ShortTasks `json:"tasks"`
+	Num  int        `json:"num"`
 }
 
 //easyjson:json
@@ -61,7 +76,12 @@ type TaskSQL struct {
 //easyjson:json
 type TasksSQL []TaskSQL
 
-func (tsql TaskSQL) ConvertToTask(isCreator bool) *Task {
+type ClearedTask struct {
+	Uid    uint64
+	TaskId string
+}
+
+func (tsql TaskSQL) ConvertToTask(isCreator bool, isCleared bool) *Task {
 	t := &Task{}
 	t.Id = tsql.Id
 	t.Title = tsql.Title
@@ -81,15 +101,9 @@ func (tsql TaskSQL) ConvertToTask(isCreator bool) *Task {
 		}
 	}
 
-	return t
-}
+	t.IsCleared = isCleared
 
-func (tsksSQL TasksSQL) ConvertToTasks() *Tasks {
-	tsks := Tasks{}
-	for _, elem := range tsksSQL {
-		tsks = append(tsks, *elem.ConvertToTask(false))
-	}
-	return &tsks
+	return t
 }
 
 func (tn TaskNew) ConvertNewTaskToTaskSQL() *TaskSQL {

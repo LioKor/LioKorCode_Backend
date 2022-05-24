@@ -6,14 +6,20 @@ import (
 )
 
 type User struct {
-	Id         uint64
+	Id         uint64    `json:"id"`
 	Username   string    `json:"username"`
-	Email      string    `json:"email"`
 	Password   string    `json:"password"`
+	Email      string    `json:"email"`
 	Fullname   string    `json:"fullname"`
 	AvatarUrl  string    `json:"avatarUrl"`
 	JoinedDate time.Time `json:"joinedDate"`
+	Verified   bool      `json:"verified"`
 	IsAdmin    bool      `json:"isAdmin"`
+	JWT        string    `json:"jwtToken"`
+}
+
+type Avatar struct {
+	AvatarUrl string `json:"avatarUrl"`
 }
 
 func (u *User) Validate() bool {
@@ -45,6 +51,28 @@ type UserAuth struct {
 	Id       uint64
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type UserUpdate struct {
+	Email    string `json:"email"`
+	Fullname string `json:"fullname"`
+}
+
+type PasswordNew struct {
+	Old string `json:"oldPassword"`
+	New string `json:"newPassword"`
+}
+
+func (u *UserUpdate) Validate() bool {
+	if len(u.Email) == 0 || !isValidEmail(u.Email) {
+		return false
+	}
+
+	if len(u.Fullname) < 6 || len(u.Fullname) > 50 {
+		return false
+	}
+
+	return true
 }
 
 //easyjson:json

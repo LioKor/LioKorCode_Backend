@@ -40,6 +40,7 @@ func CreateSolutionHandler(e *echo.Echo,
 
 func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -71,14 +72,13 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusTeapot, err.Error())
 	}
 
-	task, err := sh.TUseCase.GetTask(iid, uid)
+	task, err := sh.TUseCase.GetTask(iid, uid, true)
 	if err != nil {
 		return err
 	}
-	log.Println(sln.SourceCode)
 	testAmount := task.TestsAmount
 
-	solId, err := sh.UseCase.InsertSolution(iid, uid, sln.SourceCode, sln.Makefile, testAmount)
+	solId, err := sh.UseCase.InsertSolution(iid, uid, sln.SourceCode, testAmount)
 	if err != nil {
 		return err
 	}
@@ -109,11 +109,17 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	update := &models.SolutionUpdate{}
 
 	_ = json.Unmarshal(body, update)
-	err = sh.UseCase.UpdateSolution(solId, update.Code, update.Passed)
+	err = sh.UseCase.UpdateSolution(solId, *update)
 	if err != nil {
 		return err
 	}
-	log.Println(update)
+
+	if update.Code == 0 {
+		err = sh.TUseCase.MarkTaskDone(iid, uid)
+		if err != nil {
+			return err
+		}
+	}
 
 	ans := &models.ReturnId{Id: solId}
 	if _, err = easyjson.MarshalToWriter(ans, c.Response().Writer); err != nil {
@@ -126,6 +132,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 
 func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	id := c.Param(constants.IdKey)
 	uid, _ := strconv.ParseUint(string(id), 10, 64)
@@ -136,7 +143,7 @@ func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusTeapot, err.Error())
 	}
 
-	err := sh.UseCase.UpdateSolution(uid, info.Code, info.Passed)
+	err := sh.UseCase.UpdateSolution(uid, *info)
 	if err != nil {
 		return err
 	}
@@ -146,6 +153,7 @@ func (sh SolutionHandler) UpdateSolution(c echo.Context) error {
 
 func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -178,7 +186,7 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	tsk, err := sh.TUseCase.GetTask(utid, uid)
+	tsk, err := sh.TUseCase.GetTask(utid, uid, true)
 	if err != nil {
 		return err
 	}
@@ -209,7 +217,8 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	update := &models.SolutionUpdate{}
 
 	_ = json.Unmarshal(body, update)
-	err = sh.UseCase.UpdateSolution(usolId, update.Code, update.Passed)
+	log.Println(string(body[:]))
+	err = sh.UseCase.UpdateSolution(usolId, *update)
 	if err != nil {
 		return err
 	}
@@ -219,6 +228,7 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 
 func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -259,6 +269,7 @@ func (sh SolutionHandler) GetSolutions(c echo.Context) error {
 
 func (sh SolutionHandler) getSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
@@ -299,6 +310,7 @@ func (sh SolutionHandler) getSolution(c echo.Context) error {
 
 func (sh SolutionHandler) deleteSolution(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {

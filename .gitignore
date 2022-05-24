@@ -1,4 +1,9 @@
 .idea
 build/
+
 *.out
+*.exe
+
 main
+media/
+store/

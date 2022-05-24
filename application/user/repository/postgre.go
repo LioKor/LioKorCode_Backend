@@ -7,12 +7,17 @@ import (
 	"liokoredu/application/models"
 	"liokoredu/application/user"
 	"liokoredu/pkg/constants"
+	"liokoredu/pkg/generators"
 	"log"
+	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/labstack/echo"
 )
 
 type UserDatabase struct {
@@ -20,11 +25,89 @@ type UserDatabase struct {
 	pool      *pgxpool.Pool
 }
 
+func (ud *UserDatabase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
+	base, _ := os.Getwd()
+	p := constants.AvatartDir + strconv.FormatUint(uid, 10) + generators.RandStringRunes(constants.AvatartSalt)
+	path, err := generators.DataURLToFile(base+p, avt.AvatarUrl, constants.MaxSizeKB)
+	if err != nil {
+		log.Println("user repo: UpdateUserAvatar: error creating file:", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	path = p + "." + strings.Split(path, ".")[1]
+	resp, err := ud.pool.Exec(context.Background(),
+		`UPDATE users set avatar_url = $1 WHERE id = $2;`,
+		path, uid)
+
+	if err != nil {
+		log.Println("user repository: UpdateUserAvatar: error updating avatar:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	return nil
+}
+
+func (ud *UserDatabase) GetUserByEmailSubmitted(email string) (*models.Users, error) {
+	var usrs models.Users
+	err := pgxscan.Select(context.Background(), ud.pool, &usrs,
+		`SELECT * FROM users WHERE lower(email) = $1 and verified = true`, strings.ToLower(email))
+	if err != nil {
+		log.Println("user repository: GetUserByEmailSubmitted: error getting users", err)
+		return &models.Users{}, err
+	}
+
+	if len(usrs) == 0 {
+		return &models.Users{}, nil
+	}
+
+	return &usrs, nil
+}
+
+// UpdatePassword implements user.Repository
+func (ud *UserDatabase) UpdatePassword(uid uint64, newPassword string) error {
+	resp, err := ud.pool.Exec(context.Background(),
+		`UPDATE users set password = $1 WHERE id = $2;`,
+		newPassword, uid)
+
+	if err != nil {
+		log.Println("user repository: UpdatePassword: error updating password:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	return nil
+}
+
+// UpdateUser implements user.Repository
+func (ud *UserDatabase) UpdateUser(uid uint64, usr models.UserUpdate) error {
+	resp, err := ud.pool.Exec(context.Background(),
+		`UPDATE users set email = $1, fullname = $2 WHERE id = $3;`,
+		usr.Email, usr.Fullname, uid)
+
+	if err != nil {
+		log.Println("user repository: UpdateUser: error updating user:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if resp.RowsAffected() == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	return nil
+}
+
 // CheckUser implements user.Repository
 func (ud *UserDatabase) CheckUser(usr models.UserAuth) (*models.User, error) {
 	var gotUser models.User
 	err := ud.pool.QueryRow(context.Background(), `SELECT id, username, fullname, password, email
-	 FROM users WHERE username = $1`, usr.Username).Scan(&gotUser.Id, &gotUser.Username, &gotUser.Fullname, &gotUser.Password,
+	 FROM users WHERE lower(username) = $1`, strings.ToLower(usr.Username)).Scan(&gotUser.Id, &gotUser.Username, &gotUser.Fullname, &gotUser.Password,
 		&gotUser.Email)
 
 	if errors.As(err, &sql.ErrNoRows) {
@@ -60,8 +143,8 @@ func (ud *UserDatabase) InsertUser(usr models.User) (uint64, error) {
 func (ud *UserDatabase) GetUserByUsernameOrEmail(username string, email string) (*models.User, error) {
 	var usrs models.Users
 	err := pgxscan.Select(context.Background(), ud.pool, &usrs,
-		`SELECT * FROM users WHERE username = $1 or email = $2`,
-		username, email)
+		`SELECT * FROM users WHERE lower(username) = $1 or lower(email) = $2`,
+		strings.ToLower(username), strings.ToLower(email))
 	if err != nil {
 		log.Println("user repository: GetUserByUsernameOrEmail: error getting user:", err)
 		return nil, err

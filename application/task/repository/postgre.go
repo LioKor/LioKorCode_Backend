@@ -3,22 +3,293 @@ package repository
 import (
 	"context"
 	"fmt"
-	"liokoredu/application/models"
-	"liokoredu/application/task"
-	"liokoredu/pkg/constants"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo"
+
+	"liokoredu/application/models"
+	"liokoredu/application/task"
 )
 
 type TaskDatabase struct {
 	pool *pgxpool.Pool
 }
 
-// UpdateTask implements task.Repository
+func (td *TaskDatabase) FindTasksFull(str string, useSolved bool, solved bool, useMine bool, mine bool, uid uint64, page int, count int) (*models.ShortTasks, int, error) {
+	t := models.ShortTasks{}
+	switch {
+	case !useSolved && !useMine:
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')
+			ORDER BY id DESC 
+			LIMIT $2
+			OFFSET $3`,
+			strings.ToLower(str), count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: findTasksFull: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*) 
+			from tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')`,
+			strings.ToLower(str))
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+	case useSolved && !useMine:
+		s := "="
+		if !solved {
+			s = "!="
+		}
+
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON u.id = t.creator
+		JOIN tasks_done td ON td.uid = $1 and td.task_id`+s+` t.id
+		WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+		OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+		ORDER BY id DESC 
+		LIMIT $3
+		OFFSET $4;`,
+			uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: findTasksFull: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*)
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			JOIN tasks_done td ON td.uid = $1 and td.task_id `+s+` t.id
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $2 || '%'
+			OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+			;`,
+			uid, str)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+
+	case !useSolved && useMine:
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username AS creator
+			FROM tasks t
+ 			JOIN users u ON u.id = t.creator
+			WHERE is_private = false AND t.creator = $1 and (LOWER(title) LIKE '%' || $2 || '%'
+			OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+			ORDER BY id DESC 
+			LIMIT $3 
+			OFFSET $4`,
+			uid, str, count, (page-1)*count)
+		if err != nil {
+			log.Println("task repository: getTasks: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*) 
+				FROM tasks t
+				JOIN users u ON u.id = t.creator
+				WHERE is_private = false AND t.creator = $1 and (LOWER(title) LIKE '%' || $2 || '%'
+				OR LOWER(description) LIKE '%' || $2 || '%' OR to_char(t.id, '999') LIKE '%' || $2 || '%')
+				`,
+			uid, str)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+	case useSolved && useMine:
+		s := "="
+		if !solved {
+			s = "!="
+		}
+
+		err := pgxscan.Select(context.Background(), td.pool, &t,
+			`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON u.id = t.creator
+		JOIN tasks_done td ON td.uid = $1 and td.task_id`+s+` t.id
+		WHERE is_private = false and t.creator = $2 (LOWER(title) LIKE '%' || $3 || '%'
+		OR LOWER(description) LIKE '%' || $3 || '%' OR to_char(t.id, '999') LIKE '%' || $3 || '%')
+		ORDER BY id DESC 
+		LIMIT $4
+		OFFSET $5;`,
+			uid, uid, str, count, (page-1)*count)
+
+		if err != nil {
+			log.Println("task repository: findTasksFull: error getting tasks", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		n := []int{}
+		err = pgxscan.Select(context.Background(), td.pool, &n,
+			`select count (*) 
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			JOIN tasks_done td ON td.uid = $1 and td.task_id `+s+` t.id
+			WHERE is_private = false and t.creator = $2 (LOWER(title) LIKE '%' || $3 || '%'
+			OR LOWER(description) LIKE '%' || $3 || '%' OR to_char(t.id, '999') LIKE '%' || $3 || '%')
+			;`,
+			uid, uid, str)
+
+		if err != nil {
+			log.Println("task repository: FindTasksFull: error getting num:", err)
+			return &models.ShortTasks{}, 0, err
+		}
+
+		if len(n) == 0 {
+			return &models.ShortTasks{}, 0, err
+		}
+
+		return &t, n[0], nil
+	}
+
+	return &models.ShortTasks{}, 0, nil
+}
+
+func (td *TaskDatabase) GetPages() (int, error) {
+	n := []int{}
+	err := pgxscan.Select(context.Background(), td.pool, &n,
+		`select count (*) from tasks;`)
+
+	if err != nil {
+		log.Println("task repository: GetPages: error getting num:", err)
+		return 0, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if len(n) == 0 {
+		return 0, nil
+	}
+
+	return n[0], nil
+}
+
+func (td *TaskDatabase) FindTasks(str string, page int, count int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
+	err := pgxscan.Select(context.Background(), td.pool, &t,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
+			OR LOWER(description) LIKE '%' || $1 || '%' OR to_char(t.id, '999') LIKE '%' || $1 || '%')
+			ORDER BY id DESC 
+			LIMIT $2
+			OFFSET $3`,
+		strings.ToLower(str), count, (page-1)*count)
+	if err != nil {
+		log.Println("task repository: findTasks: error getting tasks", err)
+		return &models.ShortTasks{}, err
+	}
+
+	return &t, nil
+}
+
+func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
+	err := pgxscan.Select(context.Background(), td.pool, &t,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON t.creator = u.id
+		JOIN tasks_done td ON td.uid = $1 and td.task_id = t.id
+		WHERE is_private = false
+		ORDER BY t.id DESC LIMIT $2 OFFSET $3`,
+		uid, count, (page-1)*count)
+	if err != nil {
+		log.Println("task repository: getSolvedTasks: error getting tasks", err)
+		return &models.ShortTasks{}, err
+	}
+
+	return &t, nil
+}
+
+func (td *TaskDatabase) GetUnsolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
+	err := pgxscan.Select(context.Background(), td.pool, &t,
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		FROM tasks t
+		JOIN users u ON t.creator = u.id
+		JOIN tasks_done td ON td.uid = $1 and td.task_id != t.id
+		WHERE is_private = false
+		ORDER BY t.id DESC LIMIT $2 OFFSET $3`,
+		uid, count, (page-1)*count)
+	if err != nil {
+		log.Println("task repository: getSolvedTasks: error getting tasks", err)
+		return &models.ShortTasks{}, err
+	}
+
+	return &t, nil
+}
+
+func (td *TaskDatabase) IsCleared(taskId uint64, uid uint64) (bool, error) {
+	var id []uint64
+	err := pgxscan.Select(context.Background(), td.pool, &id,
+		`SELECT uid FROM tasks_done WHERE uid = $1 and task_id = $2`,
+		uid, taskId)
+	if err != nil {
+		log.Println("task repository: IsCleared: error checking task tasks", err)
+		return false, err
+	}
+
+	if len(id) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (td *TaskDatabase) MarkTaskDone(id uint64, uid uint64) error {
+	_, err := td.pool.Exec(context.Background(),
+		`INSERT INTO tasks_done (uid, task_id) VALUES ($1, $2);`, uid, id)
+
+	if err != nil {
+		log.Println("task repository: MarkTaskDone: error marking task_done:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
 func (td *TaskDatabase) UpdateTask(t *models.TaskSQL) error {
 	resp, err := td.pool.Exec(context.Background(),
 		`UPDATE tasks set title = $1, description = $2, hints = $3, 
@@ -38,7 +309,6 @@ func (td *TaskDatabase) UpdateTask(t *models.TaskSQL) error {
 	return nil
 }
 
-// DeleteTask implements task.Repository
 func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 	resp, err := td.pool.Exec(context.Background(),
 		`DELETE from tasks WHERE id = $1 AND creator = $2`,
@@ -57,13 +327,17 @@ func (td *TaskDatabase) DeleteTask(id uint64, uid uint64) error {
 	return nil
 }
 
-// GetTasks implements task.Repository
-func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
-	var t models.ShortTasks
+func (td *TaskDatabase) GetTasks(page int, count int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT id, title, description, test_amount FROM tasks WHERE 
-		is_private = false ORDER BY id DESC LIMIT $1 OFFSET $2`,
-		constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+			FROM tasks t
+			JOIN users u ON u.id = t.creator
+			WHERE is_private = false 
+			ORDER BY id DESC 
+			LIMIT $1 
+			OFFSET $2`,
+		count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err
@@ -72,12 +346,17 @@ func (td *TaskDatabase) GetTasks(page int) (*models.ShortTasks, error) {
 	return &t, nil
 }
 
-func (td *TaskDatabase) GetUserTasks(uid uint64, page int) (*models.ShortTasks, error) {
-	var t models.ShortTasks
+func (td *TaskDatabase) GetUserTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
+	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT id, title, description, test_amount FROM tasks WHERE 
-		is_private = false and creator = $1 ORDER BY id DESC LIMIT $2 OFFSET $3`,
-		uid, constants.TasksPerPage, (page-1)*constants.TasksPerPage)
+		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username AS creator
+			FROM tasks t
+ 			JOIN users u ON u.id = t.creator
+			WHERE is_private = false AND t.creator = $1 
+			ORDER BY id DESC 
+			LIMIT $2 
+			OFFSET $3`,
+		uid, count, (page-1)*count)
 	if err != nil {
 		log.Println("task repository: getTasks: error getting tasks", err)
 		return &models.ShortTasks{}, err

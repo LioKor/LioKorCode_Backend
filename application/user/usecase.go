@@ -11,4 +11,7 @@ type UseCase interface {
 	GetUserByUid(uid uint64) (*models.User, error)
 	CreateUser(usr models.User) (uint64, error)
 	LoginUser(usr models.UserAuth) (uint64, error)
+	UpdateUser(uid uint64, usr models.UserUpdate) error
+	UpdateUserAvatar(uid uint64, usr *models.Avatar) error
+	UpdatePassword(uid uint64, data models.PasswordNew) error
 }

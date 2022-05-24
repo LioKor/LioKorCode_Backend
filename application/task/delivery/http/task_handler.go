@@ -2,6 +2,7 @@ package http
 
 import (
 	"liokoredu/application/models"
+	"liokoredu/application/server/middleware"
 	"liokoredu/application/task"
 	"liokoredu/application/user"
 	"liokoredu/pkg/constants"
@@ -20,21 +21,28 @@ type TaskHandler struct {
 }
 
 func CreateTaskHandler(e *echo.Echo,
-	uc task.UseCase, uuc user.UseCase) {
+	uc task.UseCase, uuc user.UseCase, a middleware.Auth) {
 	taskHandler := TaskHandler{
 		uc:  uc,
 		uuc: uuc,
 	}
 	e.GET("/api/v1/tasks/:id", taskHandler.getTask)
-	e.POST("/api/v1/tasks", taskHandler.createTask)
+
+	e.POST("/api/v1/tasks", taskHandler.createTask, a.GetSession)
 	e.GET("/api/v1/tasks", taskHandler.getTasks)
-	e.GET("/api/v1/tasks/user", taskHandler.getUserTasks)
-	e.DELETE("/api/v1/tasks/:id", taskHandler.deleteTask)
-	e.PUT("/api/v1/tasks/:id", taskHandler.updateTask)
+	e.GET("/api/v1/tasks/search", taskHandler.findTasks)
+	e.GET("/api/v1/tasks/fullsearch", taskHandler.findTasksFull)
+	e.GET("/api/v1/tasks/pages", taskHandler.getPages)
+	e.GET("/api/v1/tasks/solved", taskHandler.getSolvedTasks, a.GetSession)
+	e.GET("/api/v1/tasks/unsolved", taskHandler.getUnsolvedTasks, a.GetSession)
+	e.GET("/api/v1/tasks/user", taskHandler.getUserTasks, a.GetSession)
+	e.DELETE("/api/v1/tasks/:id", taskHandler.deleteTask, a.GetSession)
+	e.PUT("/api/v1/tasks/:id", taskHandler.updateTask, a.GetSession)
 }
 
 func (th *TaskHandler) getTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	id := c.Param(constants.IdKey)
 	n, _ := strconv.ParseUint(string(id), 10, 64)
@@ -56,7 +64,7 @@ func (th *TaskHandler) getTask(c echo.Context) error {
 		}
 	}
 
-	t, err := th.uc.GetTask(n, uid)
+	t, err := th.uc.GetTask(n, uid, false)
 	if err != nil {
 		return err
 	}
@@ -69,8 +77,32 @@ func (th *TaskHandler) getTask(c echo.Context) error {
 	return nil
 }
 
+func (th *TaskHandler) getPages(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	n, err := th.uc.GetPages(cc)
+	if err != nil {
+		return err
+	}
+
+	if _, err = easyjson.MarshalToWriter(&models.Pases{Count: n}, c.Response().Writer); err != nil {
+		log.Println("task handler: getTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
 func (th *TaskHandler) getTasks(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	page := c.QueryParams().Get(constants.PageKey)
 	p, _ := strconv.Atoi(string(page))
@@ -78,7 +110,30 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 		p = 1
 	}
 
-	tsks, err := th.uc.GetTasks(p)
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := uint64(0)
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: getTasks: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		uid = 0
+	} else {
+		uid, err = th.uuc.CheckSession(cookie.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	tsks, err := th.uc.GetTasks(uid, p, cc)
 	if err != nil {
 		return err
 	}
@@ -91,29 +146,137 @@ func (th *TaskHandler) getTasks(c echo.Context) error {
 	return nil
 }
 
-func (th *TaskHandler) getUserTasks(c echo.Context) error {
+func (th *TaskHandler) findTasks(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	str := c.QueryParam("find")
+	if str == "" {
+		return c.JSON(200, models.ShortTasks{})
+	}
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := uint64(0)
 
 	cookie, err := c.Cookie(constants.SessionCookieName)
 	if err != nil && cookie != nil {
-		log.Println("user handler: createTask: error getting cookie")
+		log.Println("user handler: getTasks: error getting cookie")
 		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
 	}
 
 	if cookie == nil {
-		log.Println("user handler: createTask: no cookie")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+		uid = 0
+	} else {
+		uid, err = th.uuc.CheckSession(cookie.Value)
+		if err != nil {
+			return err
+		}
 	}
 
-	uid, err := th.uuc.CheckSession(cookie.Value)
+	tsks, err := th.uc.FindTasks(str, uid, p, cc)
 	if err != nil {
 		return err
 	}
 
-	if uid == 0 {
-		log.Println("user handler: createTask: uid 0")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
+	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
+		log.Println("task handler: findTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	return nil
+}
+
+func (th *TaskHandler) findTasksFull(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	str := c.QueryParam("find")
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := uint64(0)
+
+	cookie, err := c.Cookie(constants.SessionCookieName)
+	if err != nil && cookie != nil {
+		log.Println("user handler: getTasks: error getting cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
+	}
+
+	if cookie == nil {
+		uid = 0
+	} else {
+		uid, err = th.uuc.CheckSession(cookie.Value)
+		if err != nil {
+			return err
+		}
+	}
+
+	solved := c.QueryParams().Get("solved")
+	useSolved := false
+	boolSolved := false
+	if solved != "" {
+		useSolved = true
+		if solved == "true" {
+			boolSolved = true
+		} else if solved == "false" {
+			boolSolved = false
+		} else {
+			return echo.NewHTTPError(400, "Bad parameters")
+		}
+	}
+
+	mine := c.QueryParams().Get("mine")
+	useMine := false
+	boolMine := false
+	if mine != "" {
+		useMine = true
+		if mine == "true" {
+			boolMine = true
+		} else {
+			return echo.NewHTTPError(400, "Bad parameters")
+		}
+	}
+	if (useMine || useSolved) && uid == 0 {
+		return echo.NewHTTPError(401, "Cannot find user's tasks - not authenticated")
+	}
+
+	tsks, num, err := th.uc.FindTasksFull(str, useSolved, boolSolved, useMine, boolMine, uid, p, cc)
+	if err != nil {
+		return err
+	}
+
+	tsksNum := models.TasksWithNum{Tsks: tsks, Num: num}
+
+	if _, err = easyjson.MarshalToWriter(tsksNum, c.Response().Writer); err != nil {
+		log.Println("task handler: findTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (th *TaskHandler) getSolvedTasks(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	page := c.QueryParams().Get(constants.PageKey)
 	p, _ := strconv.Atoi(string(page))
@@ -121,7 +284,77 @@ func (th *TaskHandler) getUserTasks(c echo.Context) error {
 		p = 1
 	}
 
-	tsks, err := th.uc.GetUserTasks(uid, p)
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := c.Get(constants.UserIdKey).(uint64)
+
+	tsks, err := th.uc.GetSolvedTasks(uid, p, cc)
+	if err != nil {
+		return err
+	}
+
+	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
+		log.Println("task handler: getSolvedTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (th *TaskHandler) getUnsolvedTasks(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := c.Get(constants.UserIdKey).(uint64)
+
+	tsks, err := th.uc.GetUnsolvedTasks(uid, p, cc)
+	if err != nil {
+		return err
+	}
+
+	if _, err = easyjson.MarshalToWriter(tsks, c.Response().Writer); err != nil {
+		log.Println("task handler: getSolvedTasks: error marshaling answer to writer", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return nil
+}
+
+func (th *TaskHandler) getUserTasks(c echo.Context) error {
+	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+
+	page := c.QueryParams().Get(constants.PageKey)
+	p, _ := strconv.Atoi(string(page))
+	if p == 0 {
+		p = 1
+	}
+
+	count := c.QueryParams().Get(constants.CountKey)
+	cc, _ := strconv.Atoi(string(count))
+	if cc == 0 {
+		cc = constants.TasksPerPage
+	}
+
+	uid := c.Get(constants.UserIdKey).(uint64)
+
+	tsks, err := th.uc.GetUserTasks(uid, p, cc)
 	if err != nil {
 		return err
 	}
@@ -136,27 +369,9 @@ func (th *TaskHandler) getUserTasks(c echo.Context) error {
 
 func (th *TaskHandler) createTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
-	cookie, err := c.Cookie(constants.SessionCookieName)
-	if err != nil && cookie != nil {
-		log.Println("user handler: createTask: error getting cookie")
-		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
-	}
-
-	if cookie == nil {
-		log.Println("user handler: createTask: no cookie")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
-
-	uid, err := th.uuc.CheckSession(cookie.Value)
-	if err != nil {
-		return err
-	}
-
-	if uid == 0 {
-		log.Println("user handler: createTask: uid 0")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
+	uid := c.Get(constants.UserIdKey).(uint64)
 
 	tn := &models.TaskNew{}
 
@@ -182,32 +397,14 @@ func (th *TaskHandler) createTask(c echo.Context) error {
 
 func (th *TaskHandler) deleteTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
-	cookie, err := c.Cookie(constants.SessionCookieName)
-	if err != nil && cookie != nil {
-		log.Println("user handler: deleteTask: error getting cookie")
-		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
-	}
-
-	if cookie == nil {
-		log.Println("user handler: deleteTask: no cookie")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
-
-	uid, err := th.uuc.CheckSession(cookie.Value)
-	if err != nil {
-		return err
-	}
-
-	if uid == 0 {
-		log.Println("user handler: deleteTask: uid 0")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
+	uid := c.Get(constants.UserIdKey).(uint64)
 
 	id := c.Param(constants.IdKey)
 	iid, _ := strconv.ParseUint(string(id), 10, 64)
 
-	err = th.uc.DeleteTask(iid, uid)
+	err := th.uc.DeleteTask(iid, uid)
 	if err != nil {
 		return err
 	}
@@ -217,27 +414,9 @@ func (th *TaskHandler) deleteTask(c echo.Context) error {
 
 func (th *TaskHandler) updateTask(c echo.Context) error {
 	defer c.Request().Body.Close()
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
-	cookie, err := c.Cookie(constants.SessionCookieName)
-	if err != nil && cookie != nil {
-		log.Println("user handler: updateTask: error getting cookie")
-		return echo.NewHTTPError(http.StatusBadRequest, "error getting cookie")
-	}
-
-	if cookie == nil {
-		log.Println("user handler: updateTask: no cookie")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
-
-	uid, err := th.uuc.CheckSession(cookie.Value)
-	if err != nil {
-		return err
-	}
-
-	if uid == 0 {
-		log.Println("user handler: updateTask: uid 0")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Not authenticated")
-	}
+	uid := c.Get(constants.UserIdKey).(uint64)
 
 	tn := &models.TaskNew{}
 
@@ -250,7 +429,7 @@ func (th *TaskHandler) updateTask(c echo.Context) error {
 	id := c.Param(constants.IdKey)
 	iid, _ := strconv.ParseUint(string(id), 10, 64)
 
-	err = th.uc.UpdateTask(iid, tn)
+	err := th.uc.UpdateTask(iid, tn)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

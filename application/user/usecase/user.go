@@ -15,12 +15,52 @@ type UserUseCase struct {
 	repo user.Repository
 }
 
-// GetUserByUid implements user.UseCase
-func (uuc *UserUseCase) GetUserByUid(uid uint64) (*models.User, error) {
-	return uuc.repo.GetUserByUid(uid)
+// UpdateUserAvatar implements user.UseCase
+func (uuc *UserUseCase) UpdateUserAvatar(uid uint64, avt *models.Avatar) error {
+	return uuc.repo.UpdateUserAvatar(uid, avt)
 }
 
-// DeleteSession implements user.UseCase
+// UpdatePassword implements user.UseCase
+func (uuc *UserUseCase) UpdatePassword(uid uint64, data models.PasswordNew) error {
+	usr, err := uuc.GetUserByUid(uid)
+	if err != nil {
+		return err
+	}
+
+	if !generators.CheckHashedPassword(usr.Password, data.Old) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid password data provided")
+	}
+
+	return uuc.repo.UpdatePassword(uid, generators.HashPassword(data.New))
+}
+
+// UpdateUser implements user.UseCase
+func (uuc *UserUseCase) UpdateUser(uid uint64, usr models.UserUpdate) error {
+	if !usr.Validate() {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user data provided")
+	}
+	usrs, err := uuc.repo.GetUserByEmailSubmitted(usr.Email)
+	if err != nil {
+		return err
+	}
+
+	if len(*usrs) != 0 && ((*usrs)[0].Id != uid) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email has already been taken and verified")
+	}
+
+	return uuc.repo.UpdateUser(uid, usr)
+}
+
+func (uuc *UserUseCase) GetUserByUid(uid uint64) (*models.User, error) {
+	usr, err := uuc.repo.GetUserByUid(uid)
+	if err != nil {
+		return &models.User{}, err
+	}
+	usr.JWT = generators.CreateToken(usr)
+
+	return usr, nil
+}
+
 func (uuc *UserUseCase) DeleteSession(token string) error {
 	return uuc.repo.DeleteSession(token)
 }
@@ -49,7 +89,7 @@ func (uuc *UserUseCase) CreateUser(usr models.User) (uint64, error) {
 	}
 
 	if u != nil {
-		return 0, echo.NewHTTPError(409, "user with this usermame or email already exists")
+		return 0, echo.NewHTTPError(409, "user with this username or email already exists")
 	}
 
 	location, _ := time.LoadLocation("Europe/London")

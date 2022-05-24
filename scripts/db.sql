@@ -46,8 +46,22 @@ ALTER TABLE users ADD COLUMN avatar_url text not null default '/media/avatars/de
 ALTER TABLE users ADD COLUMN joined_date TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
 ALTER TABLE users ADD COLUMN is_admin boolean not null default false;
 alter table solutions add column makefile text not null default '';
+alter table solutions add column check_time double precision not null default 0.0;
+alter table solutions add column check_message text not null default '';
+
+alter table solutions add column compile_time double precision not null default 0.0;
+
+ALTER TABLE solutions ADD COLUMN checked_date_time TIMESTAMP WITH TIME ZONE not null default '2022-01-01 00:00:00+03';
 
 ALTER TABLE users ADD COLUMN verified boolean not null default false;
+
+ALTER TABLE solutions DROP COLUMN makefile;
+
+create table tasks_done 
+(
+    uid bigint references users (id) on delete cascade,
+    task_id bigint references tasks (id) on delete cascade
+);
 
 CREATE FUNCTION update_solution() RETURNS trigger AS $update_solution$
     BEGIN

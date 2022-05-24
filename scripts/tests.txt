@@ -33,6 +33,11 @@ some good text for testing
 }
 
 {
+ "sourceCode": "#include \"stdio.h\"\nint main() {\n    int a;\n\n    scanf(\"%d\", &a);\n    \n    printf(\"%d\", a + 1);\n    \n    return 0;\n}",
+ "makefile": "a.out:\n  gcc main.c"
+}
+
+{
  "sourceCode": "#include \"stdio.h\"\nint main() {\n    char a;\n\n    scanf(\"%c", &a);\n    \n    printf(\"%d\", a - 32);\n    \n    return 0;\n}",
  "makefile": "a.out:\n  gcc main.c"
 }
