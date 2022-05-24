@@ -208,7 +208,7 @@ func (td *TaskDatabase) GetPages() (int, error) {
 func (td *TaskDatabase) FindTasks(str string, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		`SELECT distinct t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
 			FROM tasks t
 			JOIN users u ON u.id = t.creator
 			WHERE is_private = false and (LOWER(title) LIKE '%' || $1 || '%'
@@ -228,7 +228,7 @@ func (td *TaskDatabase) FindTasks(str string, page int, count int) (*models.Shor
 func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		`SELECT distinct t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
 		FROM tasks t
 		JOIN users u ON t.creator = u.id
 		JOIN tasks_done td ON td.uid = $1 and td.task_id = t.id
@@ -246,7 +246,7 @@ func (td *TaskDatabase) GetSolvedTasks(uid uint64, page int, count int) (*models
 func (td *TaskDatabase) GetUnsolvedTasks(uid uint64, page int, count int) (*models.ShortTasks, error) {
 	t := models.ShortTasks{}
 	err := pgxscan.Select(context.Background(), td.pool, &t,
-		`SELECT t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
+		`SELECT distinct t.id, t.title, t.description, t.test_amount, t.creator as creator_id, u.username as creator
 		FROM tasks t
 		JOIN users u ON t.creator = u.id
 		JOIN tasks_done td ON td.uid = $1 and td.task_id != t.id
