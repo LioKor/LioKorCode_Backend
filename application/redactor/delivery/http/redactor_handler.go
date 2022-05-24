@@ -70,6 +70,7 @@ func createRoom(code string) (string, *Session) {
 	session := NewSession(code)
 	go session.HandleEvents()
 	go session.PingPong()
+	go session.CheckLive(roomId, subscriptions)
 	subscriptions[roomId] = session
 	return roomId, session
 }
