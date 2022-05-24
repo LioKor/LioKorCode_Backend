@@ -77,10 +77,12 @@ func (s *Session) PingPong() {
 }
 
 func (s *Session) CheckLive(roomId string, subs map[string]*Session) {
-	ticker := time.NewTicker(40 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer func() {
 		ticker.Stop()
 	}()
+
+	flag := false
 
 	for {
 		select {
@@ -89,8 +91,12 @@ func (s *Session) CheckLive(roomId string, subs map[string]*Session) {
 			if len(s.Connections) == 0 {
 				log.Println("deleted:", roomId)
 				delete(subs, roomId)
-				break
+				log.Println(len(subs))
+				flag = true
 			}
+		}
+		if flag {
+			return
 		}
 	}
 }
