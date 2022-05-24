@@ -77,7 +77,7 @@ func (s *Session) PingPong() {
 }
 
 func (s *Session) CheckLive(roomId string, subs map[string]*Session) {
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(20 * time.Minute)
 	defer func() {
 		ticker.Stop()
 	}()
