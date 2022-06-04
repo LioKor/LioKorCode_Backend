@@ -3,6 +3,8 @@ package constants
 import "time"
 
 const (
+	Host                = "127.0.0.1:9091"
+	RedisAddr           = "127.0.0.1:6379"
 	IdKey               = "id"
 	UserIdKey           = "uid"
 	CodeKey             = "code"
@@ -16,7 +18,7 @@ const (
 	CookieLength        = uint8(32)
 	SessionCookieName   = "SID"
 	SaltLength          = 8
-	PythonAddress       = "http://167.172.51.136/check_task/multiple_files"
+	PythonAddress       = "http://178.62.57.180/check_solution?api_key=secret_key_here"
 	SolutionsDir        = "/store/"
 	AvatartDir          = "/media/avatars/"
 	AvatartSalt         = 8
