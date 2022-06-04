@@ -18,7 +18,7 @@ const (
 	CookieLength        = uint8(32)
 	SessionCookieName   = "SID"
 	SaltLength          = 8
-	PythonAddress       = "http://178.62.57.180/check_solution?api_key=secret_key_here"
+	PythonAddress       = "https://checker.code.liokor.com/check_solution?api_key=secret_key_here"
 	SolutionsDir        = "/store/"
 	AvatartDir          = "/media/avatars/"
 	AvatartSalt         = 8
