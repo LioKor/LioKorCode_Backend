@@ -92,7 +92,7 @@ func (sd *SolutionDatabase) DeleteSolution(id uint64, uid uint64) error {
 func (sd *SolutionDatabase) GetSolutions(taskId uint64, uid uint64) (models.SolutionsSQL, error) {
 	var sln models.SolutionsSQL
 	err := pgxscan.Select(context.Background(), sd.pool, &sln,
-		`SELECT * FROM solutions WHERE task_id = $1 AND uid = $2`, taskId, uid)
+		`SELECT * FROM solutions WHERE task_id = $1 AND uid = $2 order by id desc LIMIT 10;`, taskId, uid)
 
 	if err != nil {
 		log.Println("solution repo: GetSolutions: error getting solutions:", err)

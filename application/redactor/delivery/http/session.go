@@ -3,6 +3,7 @@ package http
 import (
 	"liokoredu/pkg/constants"
 	"log"
+
 	"strconv"
 	"sync"
 	"time"
@@ -60,7 +61,6 @@ func (s *Session) PingPong() {
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("ping")
 			for c := range s.Connections {
 				if err := c.write(websocket.PingMessage, []byte{}); err != nil {
 					c.Broadcast(&Event{"quit", map[string]interface{}{
@@ -73,6 +73,31 @@ func (s *Session) PingPong() {
 			}
 		}
 
+	}
+}
+
+func (s *Session) CheckLive(roomId string, subs map[string]*Session) {
+	ticker := time.NewTicker(20 * time.Minute)
+	defer func() {
+		ticker.Stop()
+	}()
+
+	flag := false
+
+	for {
+		select {
+		case <-ticker.C:
+			log.Println("check for live:", roomId)
+			if len(s.Connections) == 0 {
+				log.Println("deleted:", roomId)
+				delete(subs, roomId)
+				log.Println(len(subs))
+				flag = true
+			}
+		}
+		if flag {
+			return
+		}
 	}
 }
 
