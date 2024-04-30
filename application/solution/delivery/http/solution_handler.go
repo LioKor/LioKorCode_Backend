@@ -8,6 +8,7 @@ import (
 	"liokoredu/application/solution"
 	"liokoredu/application/task"
 	"liokoredu/application/user"
+	"liokoredu/pkg/config"
 	"liokoredu/pkg/constants"
 	"log"
 	"net/http"
@@ -86,7 +87,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 	ss := models.SolutionSend{
 		Id:         solId,
 		SourceCode: sln.SourceCode,
-		Tests:      models.InputTests(task.Tests),
+		Tests:      task.Tests,
 	}
 
 	reqBody, err := json.Marshal(ss)
@@ -95,8 +96,7 @@ func (sh SolutionHandler) PostSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	resp, err := http.Post(constants.PythonAddress,
-		"application/json", bytes.NewBuffer(reqBody))
+	resp, err := http.Post(config.CheckerUrl, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		print(err)
 	}
@@ -194,7 +194,7 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 	ss := models.SolutionSend{
 		Id:         usolId,
 		SourceCode: sln.SourceCode,
-		Tests:      models.InputTests(tsk.Tests),
+		Tests:      tsk.Tests,
 	}
 
 	reqBody, err := json.Marshal(ss)
@@ -203,8 +203,7 @@ func (sh SolutionHandler) rerunSolution(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	resp, err := http.Post(constants.PythonAddress,
-		"application/json", bytes.NewBuffer(reqBody))
+	resp, err := http.Post(config.CheckerUrl, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		print(err)
 	}
@@ -334,7 +333,7 @@ func (sh SolutionHandler) deleteSolution(c echo.Context) error {
 	}
 
 	id := c.Param(constants.SolutionId)
-	iid, _ := strconv.ParseUint(string(id), 10, 64)
+	iid, _ := strconv.ParseUint(id, 10, 64)
 
 	err = sh.UseCase.DeleteSolution(iid, uid)
 	if err != nil {
